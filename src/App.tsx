@@ -6,7 +6,7 @@ import { ConnectionSetup } from "@/components/ConnectionSetup";
 import { AppShell } from "@/components/layout/AppShell";
 import { RoomView } from "@/pages/RoomView";
 import { Settings } from "@/pages/Settings";
-import { IndexRedirect } from "@/pages/IndexRedirect";
+import { Home } from "@/pages/Home";
 
 export default function App() {
   const bootstrap = useStore((s) => s.bootstrap);
@@ -33,7 +33,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route element={<AppShell />}>
-          <Route index element={<IndexRedirect />} />
+          <Route index element={<Home />} />
           <Route path="room/:roomId" element={<RoomView />} />
           <Route path="settings" element={<Settings />} />
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -95,6 +95,8 @@ app.put("/api/config", async (req, res) => {
   const next = {
     version: 1,
     theme: req.body.theme ?? "system",
+    weatherEntity:
+      typeof req.body.weatherEntity === "string" ? req.body.weatherEntity : undefined,
     rooms: req.body.rooms.map((r) => ({
       id: r.id,
       name: r.name ?? "Room",

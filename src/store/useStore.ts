@@ -57,6 +57,7 @@ interface StoreState {
 
   // theme
   setTheme: (theme: Theme) => void;
+  setWeatherEntity: (entityId: string | undefined) => Promise<void>;
 
   // config mutations (optimistic + persisted)
   updateConfig: (mutate: (draft: DashboardConfig) => void) => Promise<void>;
@@ -144,6 +145,12 @@ export const useStore = create<StoreState>((set, get) => ({
     applyTheme(theme);
     void get().updateConfig((draft) => {
       draft.theme = theme;
+    });
+  },
+
+  async setWeatherEntity(entityId) {
+    await get().updateConfig((draft) => {
+      draft.weatherEntity = entityId;
     });
   },
 

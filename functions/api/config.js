@@ -73,6 +73,8 @@ export async function onRequestPut(context) {
   const next = {
     version: 1,
     theme: body.theme ?? "system",
+    weatherEntity:
+      typeof body.weatherEntity === "string" ? body.weatherEntity : undefined,
     rooms: body.rooms.map((r) => ({
       id: r.id,
       name: r.name ?? "Room",

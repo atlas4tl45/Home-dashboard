@@ -45,6 +45,7 @@ export function LightCard({ entity, name, editing, onRemove }: CardProps) {
       name={name}
       subtitle={unavailable ? "Unavailable" : on ? `On · ${pct}%` : "Off"}
       active={on}
+      tone="warm"
       unavailable={unavailable}
       onIconClick={() => toggle(!on)}
       onRemove={editing ? onRemove : undefined}

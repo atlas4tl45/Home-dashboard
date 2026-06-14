@@ -144,7 +144,7 @@ src/
   lib/                   entity + icon helpers
   components/
     cards/               one card per domain (light, climate, lock, …)
-    layout/              shell, sidebar, header, theme toggle
+    layout/              app shell, icon rail, theme toggle
     ui/                  modal, toggle, slider
     ConnectionSetup.tsx  onboarding
     EntityPicker.tsx     add/remove entities

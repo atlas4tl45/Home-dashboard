@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import {
   ChevronDown,
@@ -14,6 +14,7 @@ import { Modal } from "@/components/ui/Modal";
 import { useStore } from "@/store/useStore";
 import { ROOM_ICON_NAMES, RoomIcon } from "@/lib/icons";
 import { normalizeUrl } from "@/api/ha";
+import { domainOf, friendlyName } from "@/lib/entities";
 import type { Theme } from "@/types";
 import type { ShellContext } from "@/components/layout/AppShell";
 
@@ -34,6 +35,17 @@ export function Settings() {
   const updateRoom = useStore((s) => s.updateRoom);
   const removeRoom = useStore((s) => s.removeRoom);
   const reorderRooms = useStore((s) => s.reorderRooms);
+  const weatherEntity = useStore((s) => s.config?.weatherEntity);
+  const setWeatherEntity = useStore((s) => s.setWeatherEntity);
+  const entities = useStore((s) => s.entities);
+
+  const weatherOptions = useMemo(
+    () =>
+      Object.values(entities)
+        .filter((e) => domainOf(e.entity_id) === "weather")
+        .sort((a, b) => friendlyName(a).localeCompare(friendlyName(b))),
+    [entities],
+  );
 
   const [confirmDisconnect, setConfirmDisconnect] = useState(false);
   const [deleteRoomId, setDeleteRoomId] = useState<string | null>(null);
@@ -70,6 +82,31 @@ export function Settings() {
               </button>
             ))}
           </div>
+        </Section>
+
+        {/* Header weather */}
+        <Section
+          title="Header weather"
+          desc="Pick a weather entity to show in the home greeting header."
+        >
+          {weatherOptions.length === 0 ? (
+            <p className="text-sm text-muted">
+              No <code>weather.*</code> entities found in Home Assistant.
+            </p>
+          ) : (
+            <select
+              className="input"
+              value={weatherEntity ?? ""}
+              onChange={(e) => setWeatherEntity(e.target.value || undefined)}
+            >
+              <option value="">None</option>
+              {weatherOptions.map((e) => (
+                <option key={e.entity_id} value={e.entity_id}>
+                  {friendlyName(e)} ({e.entity_id})
+                </option>
+              ))}
+            </select>
+          )}
         </Section>
 
         {/* Rooms */}
