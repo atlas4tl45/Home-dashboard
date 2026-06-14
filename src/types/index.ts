@@ -21,6 +21,8 @@ export interface Room {
 export interface DashboardConfig {
   version: number;
   theme: Theme;
+  /** Accent color key (see lib/accents.ts). */
+  accent?: string;
   /** entity_id of a `weather.*` entity shown in the greeting header. */
   weatherEntity?: string;
   rooms: Room[];

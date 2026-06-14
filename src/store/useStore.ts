@@ -10,9 +10,11 @@ import type {
 } from "@/types";
 import * as ha from "@/api/ha";
 import { fetchConfig, saveConfig } from "@/api/config";
+import { accentDef } from "@/lib/accents";
 
 const CREDS_KEY = "hd.creds";
 const THEME_KEY = "hd.theme";
+const ACCENT_VARS_KEY = "hd.accentVars";
 
 function loadCreds(): HaCredentials | null {
   try {
@@ -28,14 +30,28 @@ function persistCreds(creds: HaCredentials | null) {
   else localStorage.removeItem(CREDS_KEY);
 }
 
-/** Resolve "system" to an effective light/dark and apply it to <html>. */
-function applyTheme(theme: Theme) {
+/**
+ * Resolve the theme to an effective light/dark, apply it to <html>, and set the
+ * chosen accent as a CSS variable for the current mode. The accent triplets are
+ * also cached in localStorage so the pre-paint script can apply them instantly.
+ */
+function applyAppearance(theme: Theme, accentKey: string | undefined) {
   const dark =
     theme === "dark" ||
     (theme === "system" &&
       window.matchMedia("(prefers-color-scheme: dark)").matches);
-  document.documentElement.classList.toggle("dark", dark);
+  const el = document.documentElement;
+  el.classList.toggle("dark", dark);
+
+  const accent = accentDef(accentKey);
+  el.style.setProperty("--accent", dark ? accent.dark : accent.light);
+  el.style.setProperty("--accent-fg", "255 255 255");
+
   localStorage.setItem(THEME_KEY, theme);
+  localStorage.setItem(
+    ACCENT_VARS_KEY,
+    JSON.stringify({ light: accent.light, dark: accent.dark }),
+  );
 }
 
 interface StoreState {
@@ -57,6 +73,7 @@ interface StoreState {
 
   // theme
   setTheme: (theme: Theme) => void;
+  setAccent: (accentKey: string) => Promise<void>;
   setWeatherEntity: (entityId: string | undefined) => Promise<void>;
 
   // config mutations (optimistic + persisted)
@@ -87,7 +104,7 @@ export const useStore = create<StoreState>((set, get) => ({
     try {
       const config = await fetchConfig();
       set({ config });
-      applyTheme(config.theme ?? "system");
+      applyAppearance(config.theme ?? "system", config.accent);
     } catch {
       // Fall back to a usable empty config if the backend is unreachable.
       set({
@@ -142,9 +159,16 @@ export const useStore = create<StoreState>((set, get) => ({
   },
 
   setTheme(theme) {
-    applyTheme(theme);
+    applyAppearance(theme, get().config?.accent);
     void get().updateConfig((draft) => {
       draft.theme = theme;
+    });
+  },
+
+  async setAccent(accentKey) {
+    applyAppearance(get().config?.theme ?? "system", accentKey);
+    await get().updateConfig((draft) => {
+      draft.accent = accentKey;
     });
   },
 

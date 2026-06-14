@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import {
+  Check,
   ChevronDown,
   ChevronUp,
   LogOut,
@@ -13,6 +14,7 @@ import {
 import { Modal } from "@/components/ui/Modal";
 import { useStore } from "@/store/useStore";
 import { ROOM_ICON_NAMES, RoomIcon } from "@/lib/icons";
+import { ACCENTS, DEFAULT_ACCENT } from "@/lib/accents";
 import { normalizeUrl } from "@/api/ha";
 import { domainOf, friendlyName } from "@/lib/entities";
 import type { Theme } from "@/types";
@@ -28,6 +30,8 @@ export function Settings() {
   const { openAddRoom } = useOutletContext<ShellContext>();
   const theme = useStore((s) => s.config?.theme ?? "system");
   const setTheme = useStore((s) => s.setTheme);
+  const accent = useStore((s) => s.config?.accent ?? DEFAULT_ACCENT);
+  const setAccent = useStore((s) => s.setAccent);
   const rooms = useStore((s) => s.config?.rooms ?? []);
   const creds = useStore((s) => s.creds);
   const status = useStore((s) => s.status);
@@ -81,6 +85,28 @@ export function Settings() {
                 <span className="text-sm font-medium">{label}</span>
               </button>
             ))}
+          </div>
+
+          <div className="mt-4">
+            <div className="mb-2 text-sm font-medium">Accent color</div>
+            <div className="flex flex-wrap gap-2.5">
+              {Object.entries(ACCENTS).map(([key, def]) => (
+                <button
+                  key={key}
+                  onClick={() => setAccent(key)}
+                  title={def.label}
+                  aria-label={def.label}
+                  className={`flex h-9 w-9 items-center justify-center rounded-full ring-2 ring-offset-2 ring-offset-surface transition-transform hover:scale-105 ${
+                    accent === key ? "ring-content" : "ring-transparent"
+                  }`}
+                  style={{ backgroundColor: `rgb(${def.dark})` }}
+                >
+                  {accent === key && (
+                    <Check className="h-4 w-4 text-white drop-shadow" />
+                  )}
+                </button>
+              ))}
+            </div>
           </div>
         </Section>
 

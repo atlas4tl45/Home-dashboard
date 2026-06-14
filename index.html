@@ -7,11 +7,19 @@
     <meta name="theme-color" content="#070e11" />
     <title>Home Dashboard</title>
     <script>
-      // Apply the saved theme before paint to avoid a flash of the wrong mode.
+      // Apply saved theme + accent before paint to avoid a flash of the wrong mode/color.
       try {
+        var el = document.documentElement;
         var t = localStorage.getItem("hd.theme");
-        if (t === "dark" || (t !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
-          document.documentElement.classList.add("dark");
+        var dark =
+          t === "dark" ||
+          (t !== "light" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+        if (dark) el.classList.add("dark");
+        var av = localStorage.getItem("hd.accentVars");
+        if (av) {
+          var a = JSON.parse(av);
+          el.style.setProperty("--accent", dark ? a.dark : a.light);
+          el.style.setProperty("--accent-fg", "255 255 255");
         }
       } catch (e) {}
     </script>

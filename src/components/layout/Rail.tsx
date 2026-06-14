@@ -96,7 +96,7 @@ function RailButton({
       <span
         className={`flex h-12 w-12 items-center justify-center rounded-2xl transition-colors ${
           active
-            ? "bg-accent text-accent-fg shadow-[0_8px_20px_-8px_rgb(13_148_136_/_0.7)]"
+            ? "bg-accent text-accent-fg shadow-[0_8px_20px_-8px_rgb(var(--accent)/0.7)]"
             : "text-muted hover:bg-surface-2 hover:text-content"
         }`}
       >

@@ -6,7 +6,7 @@ import type { LucideIcon } from "lucide-react";
 type Tone = "accent" | "warm";
 
 const TONE_ACTIVE: Record<Tone, string> = {
-  accent: "bg-accent text-accent-fg shadow-[0_8px_20px_-8px_rgb(13_148_136_/_0.7)]",
+  accent: "bg-accent text-accent-fg shadow-[0_8px_20px_-8px_rgb(var(--accent)/0.7)]",
   warm: "bg-amber-400 text-amber-950 shadow-[0_8px_22px_-8px_rgb(251_191_36_/_0.75)]",
 };
 
