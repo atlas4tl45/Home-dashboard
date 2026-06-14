@@ -58,13 +58,13 @@ export function Home() {
       <SystemPanel open={sysOpen} onClose={() => setSysOpen(false)} />
 
       {scenes.length > 0 && (
-        <section className="mb-6">
+        <section className="mb-8">
           <HomeScenes scenes={scenes} />
         </section>
       )}
 
       {hasMiddle && (
-        <div className="mb-6 grid gap-6 lg:grid-cols-3">
+        <div className="mb-8 grid gap-8 lg:grid-cols-3">
           {cameras.length > 0 && (
             <section className={alarms.length > 0 ? "lg:col-span-2" : "lg:col-span-3"}>
               <HomeCameras cameras={cameras} />

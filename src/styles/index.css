@@ -8,15 +8,15 @@
 /* translucency. Teal accent; active tiles glow in their tone.          */
 /* ------------------------------------------------------------------ */
 :root {
-  --bg: 240 242 245;
+  --bg: 244 246 250;
   --surface: 255 255 255;
-  --surface-2: 237 240 244;
-  --border: 224 228 234;
+  --surface-2: 240 243 248;
+  --border: 226 230 238;
   --content: 18 26 30;
   --muted: 99 111 120;
   --accent: 13 148 136; /* teal-600 */
   --accent-fg: 255 255 255;
-  --card-shadow: 0 1px 2px rgb(15 30 35 / 0.04), 0 18px 36px -22px rgb(15 30 35 / 0.28);
+  --card-shadow: 0 2px 6px rgb(20 40 60 / 0.04), 0 22px 48px -26px rgb(20 40 60 / 0.22);
   color-scheme: light;
 }
 
@@ -68,9 +68,12 @@ body {
 @layer components {
   .card {
     background: rgb(var(--surface));
-    border: 1px solid rgb(var(--border));
-    border-radius: 1.5rem;
+    border-radius: 1.75rem;
     box-shadow: var(--card-shadow);
+  }
+  /* Dark mode keeps a hairline so soft cards stay legible on the dark bg. */
+  .dark .card {
+    border: 1px solid rgb(var(--border));
   }
 
   .btn {

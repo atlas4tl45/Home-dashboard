@@ -32,8 +32,8 @@ function MusicBar({ entity }: { entity: HassEntity }) {
     callService("media_player", service, undefined, { entity_id: entity.entity_id });
 
   return (
-    <div className="flex items-center gap-3 rounded-2xl bg-surface-2 px-3 py-2.5">
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-surface text-muted">
+    <div className="card flex items-center gap-3 px-3 py-2.5">
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-surface-2 text-muted">
         {src ? <img src={src} alt="" className="h-full w-full object-cover" /> : <Music className="h-5 w-5" />}
       </div>
       <div className="min-w-0 flex-1">

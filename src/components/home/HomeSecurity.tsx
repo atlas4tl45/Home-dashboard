@@ -57,7 +57,7 @@ function AlarmPanel({ entity }: { entity: HassEntity }) {
   const Icon = triggered ? ShieldAlert : armed ? ShieldCheck : ShieldOff;
 
   return (
-    <div className="rounded-3xl p-5" style={{ background: "rgb(var(--surface))" }}>
+    <div className="card p-5">
       <div className="flex items-center gap-4">
         <span className={`flex h-14 w-14 items-center justify-center rounded-2xl ${tint}`}>
           <Icon className="h-7 w-7" />
