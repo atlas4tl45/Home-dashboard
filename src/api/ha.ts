@@ -107,6 +107,25 @@ export async function callService(
   await haCallService(connection, domain, service, data, target);
 }
 
+/** Call a service that returns response data (e.g. weather/calendar fetches). */
+export async function callServiceWithResponse<T = any>(
+  domain: string,
+  service: string,
+  data?: Record<string, unknown>,
+  target?: { entity_id?: string | string[] },
+): Promise<T> {
+  if (!connection) throw new HaError("Not connected to Home Assistant.");
+  const result = await connection.sendMessagePromise<{ response: T }>({
+    type: "call_service",
+    domain,
+    service,
+    service_data: data,
+    target,
+    return_response: true,
+  });
+  return result.response;
+}
+
 /**
  * Ask Home Assistant to sign a path so it can be loaded by the browser without
  * an Authorization header (needed for <img>/<video> camera sources).

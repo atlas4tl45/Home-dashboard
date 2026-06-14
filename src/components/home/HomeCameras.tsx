@@ -6,15 +6,10 @@ import { useSignedImage } from "@/hooks/useSignedImage";
 /** Frameless camera thumbnails (rounded images, label overlay). */
 export function HomeCameras({ cameras }: { cameras: HassEntity[] }) {
   return (
-    <div className="flex flex-col gap-4">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
-        Cameras
-      </h2>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {cameras.map((c) => (
-          <CameraThumb key={c.entity_id} entity={c} />
-        ))}
-      </div>
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+      {cameras.map((c) => (
+        <CameraThumb key={c.entity_id} entity={c} />
+      ))}
     </div>
   );
 }

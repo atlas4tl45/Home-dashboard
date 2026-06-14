@@ -56,21 +56,21 @@ export function GreetingHeader({ onReveal }: { onReveal?: () => void }) {
   };
 
   return (
-    <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
+    <header className="flex flex-wrap items-end justify-between gap-4">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
           {greeting(now)}
         </h1>
-        <p className="mt-0.5 text-sm text-muted">{date}</p>
+        <p className="mt-1 text-sm text-muted sm:text-base">{date}</p>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-end gap-6">
         {weather && (
           <div className="flex items-center gap-2.5">
-            <Icon className="h-7 w-7 text-accent" />
+            <Icon className="h-8 w-8 text-accent" />
             <div className="leading-tight">
               {temp != null && (
-                <div className="text-lg font-semibold tabular-nums">
+                <div className="text-xl font-semibold tabular-nums">
                   {Math.round(Number(temp))}
                   {unit}
                 </div>
@@ -79,14 +79,11 @@ export function GreetingHeader({ onReveal }: { onReveal?: () => void }) {
             </div>
           </div>
         )}
-        <div className="text-right leading-none">
-          <div
-            onClick={onClockTap}
-            className="cursor-default select-none text-2xl font-semibold tabular-nums sm:text-3xl"
-            title=""
-          >
-            {time}
-          </div>
+        <div
+          onClick={onClockTap}
+          className="cursor-default select-none text-4xl font-semibold tabular-nums sm:text-5xl"
+        >
+          {time}
         </div>
       </div>
     </header>

@@ -12,26 +12,21 @@ const STATE_LABELS: Record<string, string> = {
   armed_vacation: "Armed · Vacation",
   arming: "Arming…",
   pending: "Pending…",
-  triggered: "Triggered!",
+  triggered: "Triggered",
 };
 
-/** Custom, frameless security panel; tints itself by alarm state. */
+/** Frameless security hero: large status with inline arm/disarm controls. */
 export function HomeSecurity({ alarms }: { alarms: HassEntity[] }) {
   return (
-    <div className="flex flex-col gap-4">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
-        Security
-      </h2>
-      <div className="flex flex-col gap-4">
-        {alarms.map((a) => (
-          <AlarmPanel key={a.entity_id} entity={a} />
-        ))}
-      </div>
+    <div className="flex flex-col gap-6">
+      {alarms.map((a) => (
+        <AlarmRow key={a.entity_id} entity={a} multiple={alarms.length > 1} />
+      ))}
     </div>
   );
 }
 
-function AlarmPanel({ entity }: { entity: HassEntity }) {
+function AlarmRow({ entity, multiple }: { entity: HassEntity; multiple: boolean }) {
   const unavailable = isUnavailable(entity);
   const state = entity.state;
   const attrs = entity.attributes ?? {};
@@ -57,24 +52,26 @@ function AlarmPanel({ entity }: { entity: HassEntity }) {
   const Icon = triggered ? ShieldAlert : armed ? ShieldCheck : ShieldOff;
 
   return (
-    <div className="card p-5">
-      <div className="flex items-center gap-4">
-        <span className={`flex h-14 w-14 items-center justify-center rounded-2xl ${tint}`}>
-          <Icon className="h-7 w-7" />
-        </span>
-        <div className="min-w-0">
-          <div className="truncate text-sm text-muted">{friendlyName(entity)}</div>
-          <div className="text-lg font-semibold">
-            {unavailable ? "Unavailable" : STATE_LABELS[state] ?? state}
+    <div className="flex flex-wrap items-center gap-x-5 gap-y-4">
+      <span className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl ${tint}`}>
+        <Icon className="h-8 w-8" />
+      </span>
+      <div className="min-w-0 flex-1">
+        {multiple && (
+          <div className="truncate text-xs uppercase tracking-wide text-muted">
+            {friendlyName(entity)}
           </div>
+        )}
+        <div className="text-2xl font-semibold tracking-tight sm:text-3xl">
+          {unavailable ? "Unavailable" : STATE_LABELS[state] ?? state}
         </div>
       </div>
 
       {!unavailable && (
-        <div className="mt-4 flex flex-col gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {needsCode && (state === "disarmed" ? armRequiresCode : true) && (
             <input
-              className="input"
+              className="input w-28"
               type="password"
               inputMode={attrs.code_format === "number" ? "numeric" : "text"}
               placeholder="Code"
@@ -83,20 +80,20 @@ function AlarmPanel({ entity }: { entity: HassEntity }) {
             />
           )}
           {state === "disarmed" ? (
-            <div className="grid grid-cols-3 gap-2">
-              <button className="btn-outline px-2 py-2.5 text-xs" onClick={() => call("alarm_arm_home", armRequiresCode)}>
+            <>
+              <button className="btn-outline" onClick={() => call("alarm_arm_home", armRequiresCode)}>
                 Home
               </button>
-              <button className="btn-outline px-2 py-2.5 text-xs" onClick={() => call("alarm_arm_away", armRequiresCode)}>
+              <button className="btn-outline" onClick={() => call("alarm_arm_away", armRequiresCode)}>
                 Away
               </button>
-              <button className="btn-outline px-2 py-2.5 text-xs" onClick={() => call("alarm_arm_night", armRequiresCode)}>
+              <button className="btn-outline" onClick={() => call("alarm_arm_night", armRequiresCode)}>
                 Night
               </button>
-            </div>
+            </>
           ) : (
             <button
-              className="btn w-full bg-red-500 text-white hover:opacity-90"
+              className="btn bg-red-500 px-5 text-white hover:opacity-90"
               onClick={() => call("alarm_disarm", needsCode)}
             >
               Disarm
