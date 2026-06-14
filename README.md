@@ -77,10 +77,38 @@ npm start       # Express serves dist/ and the config API on :3001
 
 Then open **http://localhost:3001**. Set `PORT` to change the port.
 
+### Deploy to Cloudflare Pages (or any static host)
+
+The dashboard runs fine as a **pure static site** — there's no backend to host.
+When no `/api/config` backend is present, it stores your rooms/layout/theme in
+the browser's `localStorage` instead (per-device rather than synced).
+
+In the Cloudflare Pages project settings, use:
+
+| Setting               | Value           |
+| --------------------- | --------------- |
+| **Build command**     | `npm run build` |
+| **Build output dir**  | `dist`          |
+| **Node version**      | `20` (or newer) |
+
+> **White page after deploy?** It almost always means Cloudflare served the
+> repository's source `index.html` (which points at `/src/main.tsx`, a dev-only
+> file) instead of the built app. Make sure the **build command** and **output
+> directory** above are set so Cloudflare builds `dist/` — `dist/` is
+> git-ignored on purpose, so Cloudflare must build it. The included
+> `public/_redirects` handles SPA deep links automatically.
+
+If you want rooms/layout to **sync across devices**, deploy the Node server
+(`npm start`) somewhere instead — e.g. a small VPS, Fly.io, or a Raspberry Pi
+on your network — and point your browser at it.
+
 ## Configuration & data
 
-- Dashboard layout is stored at `server/data/config.json` (created on first
-  run, git-ignored). Back this file up to preserve your rooms/layout.
+- With the Node backend, dashboard layout is stored at
+  `server/data/config.json` (created on first run, git-ignored). Back this file
+  up to preserve your rooms/layout.
+- On a static host with no backend, layout falls back to this browser's
+  `localStorage` (`hd.config`) — per-device rather than synced.
 - Your Home Assistant credentials live only in the browser's `localStorage`
   (`hd.creds`) and are never sent to the backend. Use **Settings → Disconnect**
   to remove them.
