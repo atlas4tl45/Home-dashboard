@@ -98,16 +98,36 @@ In the Cloudflare Pages project settings, use:
 > git-ignored on purpose, so Cloudflare must build it. The included
 > `public/_redirects` handles SPA deep links automatically.
 
-If you want rooms/layout to **sync across devices**, deploy the Node server
-(`npm start`) somewhere instead — e.g. a small VPS, Fly.io, or a Raspberry Pi
-on your network — and point your browser at it.
+#### Sync across devices on Cloudflare (free, with KV)
+
+To make your rooms/layout sync across devices while staying entirely on the
+free Pages tier, the project ships a Pages Function (`functions/api/config.js`)
+backed by **Cloudflare KV**. One-time setup:
+
+1. **Create a KV namespace** — Cloudflare dashboard → *Workers & Pages* → *KV*
+   → *Create a namespace* (e.g. `home-dashboard`).
+2. **Bind it to your Pages project** — your Pages project → *Settings* →
+   *Functions* → *KV namespace bindings* → *Add binding*:
+   - Variable name: **`DASHBOARD_KV`**
+   - KV namespace: the one you just created
+3. **Redeploy** (Deployments → Retry/Redeploy, or push a commit).
+
+That's it — `GET/PUT /api/config` now read/write KV and every device shares the
+same layout. If the binding is ever missing, the Function returns `503` and the
+app automatically falls back to per-device `localStorage`, so it never breaks.
+
+> Prefer a Node host instead? You can still run the Express server (`npm start`)
+> on a VPS, Fly.io, or a Raspberry Pi on your network and point your browser at
+> it — same `/api/config` contract.
 
 ## Configuration & data
 
 - With the Node backend, dashboard layout is stored at
   `server/data/config.json` (created on first run, git-ignored). Back this file
   up to preserve your rooms/layout.
-- On a static host with no backend, layout falls back to this browser's
+- On Cloudflare Pages with the KV binding (see below), layout is stored in
+  Cloudflare KV and synced across devices.
+- On a static host with no backend/KV, layout falls back to this browser's
   `localStorage` (`hd.config`) — per-device rather than synced.
 - Your Home Assistant credentials live only in the browser's `localStorage`
   (`hd.creds`) and are never sent to the backend. Use **Settings → Disconnect**
