@@ -9,6 +9,8 @@ import { CameraCard } from "./CameraCard";
 import { AlarmCard } from "./AlarmCard";
 import { CoverCard } from "./CoverCard";
 import { FanCard } from "./FanCard";
+import { SceneCard } from "./SceneCard";
+import { MediaPlayerCard } from "./MediaPlayerCard";
 import { SensorCard } from "./SensorCard";
 
 interface EntityCardProps {
@@ -41,6 +43,10 @@ export function EntityCard({ item, editing, onRemove }: EntityCardProps) {
       return <CoverCard {...props} />;
     case "fan":
       return <FanCard {...props} />;
+    case "scene":
+      return <SceneCard {...props} />;
+    case "media_player":
+      return <MediaPlayerCard {...props} />;
     case "sensor":
     case "binary_sensor":
       return <SensorCard {...props} />;

@@ -18,6 +18,8 @@ import {
   Fan,
   Gauge,
   Activity,
+  Sparkles,
+  Music,
   DoorOpen,
   Utensils,
   Baby,
@@ -68,6 +70,8 @@ const DOMAIN_ICONS: Record<string, LucideIcon> = {
   alarm_control_panel: ShieldCheck,
   cover: Blinds,
   fan: Fan,
+  scene: Sparkles,
+  media_player: Music,
   sensor: Gauge,
   binary_sensor: Activity,
 };

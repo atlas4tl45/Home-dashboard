@@ -65,6 +65,8 @@ export const CARD_DOMAINS = new Set([
   "alarm_control_panel",
   "cover",
   "fan",
+  "scene",
+  "media_player",
   "sensor",
   "binary_sensor",
 ]);
@@ -78,6 +80,7 @@ export const DOMAIN_LABELS: Record<string, string> = {
   alarm_control_panel: "Alarm",
   cover: "Cover",
   fan: "Fan",
+  scene: "Scene",
   sensor: "Sensor",
   binary_sensor: "Binary Sensor",
   media_player: "Media Player",
