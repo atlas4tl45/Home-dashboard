@@ -1,0 +1,11 @@
+node_modules
+dist
+*.tsbuildinfo
+*.local
+.DS_Store
+.env
+.env.*
+npm-debug.log*
+
+# Runtime data store (user dashboard config lives here)
+server/data/config.json
