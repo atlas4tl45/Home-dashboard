@@ -47,8 +47,8 @@ export function CardShell({
           disabled={!onIconClick || unavailable}
           className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-colors ${
             active
-              ? "bg-accent text-accent-fg"
-              : "bg-surface-2 text-muted"
+              ? "bg-accent text-accent-fg shadow-[0_6px_18px_-8px_rgb(13_148_136_/_0.7)]"
+              : "bg-content/5 text-muted"
           } ${onIconClick && !unavailable ? "cursor-pointer hover:opacity-90" : "cursor-default"}`}
         >
           <Icon className="h-5 w-5" />

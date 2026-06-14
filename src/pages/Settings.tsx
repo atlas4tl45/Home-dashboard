@@ -10,7 +10,6 @@ import {
   Sun,
   Trash2,
 } from "lucide-react";
-import { Header } from "@/components/layout/Header";
 import { Modal } from "@/components/ui/Modal";
 import { useStore } from "@/store/useStore";
 import { ROOM_ICON_NAMES, RoomIcon } from "@/lib/icons";
@@ -25,7 +24,7 @@ const THEMES: { value: Theme; label: string; icon: typeof Sun }[] = [
 ];
 
 export function Settings() {
-  const { openMenu, openAddRoom } = useOutletContext<ShellContext>();
+  const { openAddRoom } = useOutletContext<ShellContext>();
   const theme = useStore((s) => s.config?.theme ?? "system");
   const setTheme = useStore((s) => s.setTheme);
   const rooms = useStore((s) => s.config?.rooms ?? []);
@@ -51,8 +50,8 @@ export function Settings() {
 
   return (
     <>
-      <Header title="Settings" onMenu={openMenu} />
-      <div className="mx-auto w-full max-w-3xl p-4 sm:p-6">
+      <h1 className="mb-5 text-2xl font-semibold tracking-tight">Settings</h1>
+      <div className="mx-auto w-full max-w-3xl">
         {/* Appearance */}
         <Section title="Appearance" desc="Choose how the dashboard looks.">
           <div className="grid grid-cols-3 gap-2">

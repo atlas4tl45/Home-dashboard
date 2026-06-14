@@ -3,31 +3,40 @@
 @tailwind utilities;
 
 /* ------------------------------------------------------------------ */
-/* Theme tokens. Light mode is the default; `.dark` on <html> flips    */
-/* the palette. Components only ever reference the semantic tokens     */
-/* (bg, surface, content, accent, …) defined in tailwind.config.js.    */
+/* Glassmorphism theme. A soft gradient lives behind everything; cards  */
+/* and bars are translucent and backdrop-blurred so the gradient frosts */
+/* through them. Accent is teal/green. `.dark` flips the palette.        */
 /* ------------------------------------------------------------------ */
 :root {
-  --bg: 244 246 250;
+  --bg: 234 244 242;
   --surface: 255 255 255;
-  --surface-2: 240 243 248;
-  --border: 224 228 236;
-  --content: 17 24 39;
-  --muted: 107 114 128;
-  --accent: 37 99 235;
+  --surface-2: 244 250 249;
+  --border: 203 222 219;
+  --content: 15 33 33;
+  --muted: 82 105 104;
+  --accent: 13 148 136; /* teal-600 */
   --accent-fg: 255 255 255;
+
+  /* glass */
+  --glass-alpha: 0.6;
+  --glass-border: rgb(255 255 255 / 0.6);
+  --glass-shadow: 0 10px 34px -14px rgb(13 80 72 / 0.38);
   color-scheme: light;
 }
 
 .dark {
-  --bg: 9 12 18;
-  --surface: 19 24 33;
-  --surface-2: 27 33 44;
-  --border: 38 45 58;
-  --content: 233 237 243;
-  --muted: 148 158 173;
-  --accent: 59 130 246;
+  --bg: 7 14 17;
+  --surface: 26 38 41;
+  --surface-2: 33 47 51;
+  --border: 53 71 74;
+  --content: 226 240 238;
+  --muted: 150 173 171;
+  --accent: 20 184 166; /* teal-500 */
   --accent-fg: 255 255 255;
+
+  --glass-alpha: 0.5;
+  --glass-border: rgb(255 255 255 / 0.1);
+  --glass-shadow: 0 10px 34px -14px rgb(0 0 0 / 0.6);
   color-scheme: dark;
 }
 
@@ -42,19 +51,38 @@ body,
 }
 
 body {
-  @apply bg-bg text-content antialiased;
+  @apply text-content antialiased;
   margin: 0;
+  background-color: rgb(var(--bg));
   font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica,
     Arial, sans-serif;
 }
 
-/* Subtle, modern scrollbars */
+/* The ambient gradient that the glass frosts over. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(55rem 55rem at 8% -12%, rgb(20 184 166 / 0.28), transparent 60%),
+    radial-gradient(45rem 45rem at 102% 4%, rgb(56 189 248 / 0.2), transparent 55%),
+    radial-gradient(48rem 48rem at 52% 118%, rgb(16 185 129 / 0.18), transparent 55%);
+}
+.dark body::before {
+  background:
+    radial-gradient(55rem 55rem at 8% -12%, rgb(20 184 166 / 0.22), transparent 60%),
+    radial-gradient(45rem 45rem at 102% 4%, rgb(79 70 229 / 0.2), transparent 55%),
+    radial-gradient(48rem 48rem at 52% 118%, rgb(13 148 136 / 0.22), transparent 55%);
+}
+
+/* Scrollbars */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
 ::-webkit-scrollbar-thumb {
-  @apply bg-border;
+  background: rgb(var(--muted) / 0.35);
   border-radius: 9999px;
   border: 2px solid transparent;
   background-clip: padding-box;
@@ -64,35 +92,58 @@ body {
 }
 
 @layer components {
+  /* Frosted glass surface */
+  .glass {
+    background: rgb(var(--surface) / var(--glass-alpha));
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(18px) saturate(150%);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
+  }
+
   .card {
-    @apply rounded-2xl border border-border bg-surface shadow-card;
+    @apply glass rounded-2xl;
+    box-shadow: var(--glass-shadow);
   }
 
   .btn {
     @apply inline-flex items-center justify-center gap-2 rounded-xl px-3.5 py-2
-      text-sm font-medium transition-colors focus:outline-none
+      text-sm font-medium transition-all focus:outline-none
       focus-visible:ring-2 focus-visible:ring-accent/60 disabled:opacity-50
       disabled:pointer-events-none;
   }
   .btn-primary {
-    @apply btn bg-accent text-accent-fg hover:opacity-90;
+    @apply btn bg-accent text-accent-fg shadow-[0_6px_18px_-6px_rgb(13_148_136_/_0.6)] hover:brightness-110;
   }
   .btn-ghost {
-    @apply btn text-content hover:bg-surface-2;
+    @apply btn text-content;
+  }
+  .btn-ghost:hover {
+    background: rgb(var(--surface) / 0.55);
   }
   .btn-outline {
-    @apply btn border border-border text-content hover:bg-surface-2;
+    @apply btn text-content;
+    border: 1px solid var(--glass-border);
+    background: rgb(var(--surface) / 0.4);
+    backdrop-filter: blur(8px);
+  }
+  .btn-outline:hover {
+    background: rgb(var(--surface) / 0.7);
   }
 
   .input {
-    @apply w-full rounded-xl border border-border bg-surface-2 px-3.5 py-2.5
-      text-sm text-content placeholder:text-muted focus:outline-none
-      focus-visible:ring-2 focus-visible:ring-accent/60;
+    @apply w-full rounded-xl px-3.5 py-2.5 text-sm text-content
+      placeholder:text-muted focus:outline-none focus-visible:ring-2
+      focus-visible:ring-accent/60;
+    background: rgb(var(--surface) / 0.5);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(8px);
   }
 
   .chip {
-    @apply inline-flex items-center gap-1.5 rounded-full border border-border
-      bg-surface-2 px-2.5 py-1 text-xs font-medium text-muted;
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs
+      font-medium text-muted;
+    border: 1px solid var(--glass-border);
+    background: rgb(var(--surface) / 0.4);
   }
 }
 
