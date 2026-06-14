@@ -1,6 +1,9 @@
 import { useMemo } from "react";
 import { GreetingHeader } from "@/components/GreetingHeader";
-import { EntityCard } from "@/components/cards/EntityCard";
+import { HomeScenes } from "@/components/home/HomeScenes";
+import { HomeSecurity } from "@/components/home/HomeSecurity";
+import { HomeCameras } from "@/components/home/HomeCameras";
+import { HomeMusic } from "@/components/home/HomeMusic";
 import { useStore } from "@/store/useStore";
 import { domainOf, friendlyName } from "@/lib/entities";
 import type { HassEntity } from "@/types";
@@ -8,82 +11,85 @@ import type { HassEntity } from "@/types";
 export function Home() {
   const entities = useStore((s) => s.entities);
 
-  const groups = useMemo(() => {
-    const byDomain: Record<string, HassEntity[]> = {
-      alarm_control_panel: [],
-      camera: [],
-      scene: [],
-      media_player: [],
+  const { alarms, cameras, scenes, players } = useMemo(() => {
+    const g = {
+      alarms: [] as HassEntity[],
+      cameras: [] as HassEntity[],
+      scenes: [] as HassEntity[],
+      players: [] as HassEntity[],
     };
     for (const e of Object.values(entities)) {
-      const d = domainOf(e.entity_id);
-      if (d in byDomain) byDomain[d].push(e);
+      switch (domainOf(e.entity_id)) {
+        case "alarm_control_panel":
+          g.alarms.push(e);
+          break;
+        case "camera":
+          g.cameras.push(e);
+          break;
+        case "scene":
+          g.scenes.push(e);
+          break;
+        case "media_player":
+          g.players.push(e);
+          break;
+      }
     }
-    for (const list of Object.values(byDomain)) {
-      list.sort((a, b) => friendlyName(a).localeCompare(friendlyName(b)));
-    }
-    return byDomain;
+    const byName = (a: HassEntity, b: HassEntity) =>
+      friendlyName(a).localeCompare(friendlyName(b));
+    g.alarms.sort(byName);
+    g.cameras.sort(byName);
+    g.scenes.sort(byName);
+    // Active players first.
+    g.players.sort((a, b) => {
+      const score = (e: HassEntity) => (e.state === "playing" ? 0 : e.state === "paused" ? 1 : 2);
+      return score(a) - score(b) || byName(a, b);
+    });
+    return g;
   }, [entities]);
 
-  const hasAny =
-    groups.alarm_control_panel.length +
-      groups.camera.length +
-      groups.scene.length +
-      groups.media_player.length >
-    0;
+  const hasMiddle = cameras.length > 0 || alarms.length > 0;
+  const hasAny = hasMiddle || scenes.length > 0 || players.length > 0;
 
   return (
     <>
       <GreetingHeader />
 
-      <Section title="Alarm" items={groups.alarm_control_panel} wide />
-      <Section title="Cameras" items={groups.camera} wide />
-      <Section title="Scenes" items={groups.scene} />
-      <Section title="Music" items={groups.media_player} wide />
+      {scenes.length > 0 && (
+        <section className="mb-6">
+          <HomeScenes scenes={scenes} />
+        </section>
+      )}
+
+      {hasMiddle && (
+        <div className="mb-6 grid gap-6 lg:grid-cols-3">
+          {cameras.length > 0 && (
+            <section className={alarms.length > 0 ? "lg:col-span-2" : "lg:col-span-3"}>
+              <HomeCameras cameras={cameras} />
+            </section>
+          )}
+          {alarms.length > 0 && (
+            <section className={cameras.length > 0 ? "lg:col-span-1" : "lg:col-span-3"}>
+              <HomeSecurity alarms={alarms} />
+            </section>
+          )}
+        </div>
+      )}
+
+      {players.length > 0 && (
+        <section className="mb-2">
+          <HomeMusic players={players} />
+        </section>
+      )}
 
       {!hasAny && (
-        <div className="card flex flex-col items-center gap-2 py-16 text-center">
-          <p className="font-medium">Nothing to show here yet</p>
-          <p className="text-sm text-muted">
-            Alarm, cameras, scenes and media players from Home Assistant will
-            appear here automatically.
+        <div className="rounded-3xl bg-surface-2 px-6 py-16 text-center">
+          <p className="font-medium">Your home at a glance</p>
+          <p className="mt-1 text-sm text-muted">
+            Alarm, cameras, scenes and music from Home Assistant will appear here
+            automatically.
           </p>
         </div>
       )}
     </>
-  );
-}
-
-/**
- * A home section. `wide` sections use a grid whose columns are half-width so
- * the col-span-2 camera/media cards land two-per-row on larger screens.
- */
-function Section({
-  title,
-  items,
-  wide,
-}: {
-  title: string;
-  items: HassEntity[];
-  wide?: boolean;
-}) {
-  if (items.length === 0) return null;
-  return (
-    <section className="mb-8">
-      <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted">
-        {title}
-      </h2>
-      <div
-        className={
-          wide
-            ? "grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4"
-            : "grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4"
-        }
-      >
-        {items.map((e) => (
-          <EntityCard key={e.entity_id} item={{ entity_id: e.entity_id }} />
-        ))}
-      </div>
-    </section>
   );
 }
