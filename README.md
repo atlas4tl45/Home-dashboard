@@ -133,6 +133,24 @@ app automatically falls back to per-device `localStorage`, so it never breaks.
   (`hd.creds`) and are never sent to the backend. Use **Settings → Disconnect**
   to remove them.
 
+## Kiosk / wall-tablet use
+
+- **Hidden settings:** Settings isn't shown in the nav. **Triple-tap the clock**
+  on the home screen to open the system panel (connectivity, reload, reconnect,
+  open settings) — this keeps casual taps from changing your setup.
+- **Auto-connect (survives storage wipes):** Some kiosk browsers clear
+  `localStorage` on quit, which would otherwise force you to re-enter your
+  token. Point the kiosk's start URL at the dashboard with credentials in the
+  hash fragment and it connects automatically every launch:
+
+  ```
+  https://your-dashboard/#ha_url=http://homeassistant.local:8123&token=YOUR_LONG_LIVED_TOKEN
+  ```
+
+  The fragment (`#…`) is never sent to any server. The app consumes it on load
+  and removes it from the address bar. (Alternatively, disable "clear cache on
+  exit" in your kiosk browser so the saved token persists.)
+
 ## Project layout
 
 ```

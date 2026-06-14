@@ -31,6 +31,25 @@ function persistCreds(creds: HaCredentials | null) {
 }
 
 /**
+ * Read HA credentials from the launch URL so a kiosk can auto-connect even if
+ * localStorage was wiped. Use the hash fragment (preferred, never sent to a
+ * server) or query string:
+ *   https://dash.example/#ha_url=http://homeassistant.local:8123&token=XXXX
+ */
+function credsFromUrl(): HaCredentials | null {
+  try {
+    const hash = window.location.hash.replace(/^#/, "");
+    const params = new URLSearchParams(hash || window.location.search.replace(/^\?/, ""));
+    const url = params.get("ha_url") || params.get("ha");
+    const token = params.get("token");
+    if (url && token) return { url, token };
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
+/**
  * Resolve the theme to an effective light/dark, apply it to <html>, and set the
  * chosen accent as a CSS variable for the current mode. The accent triplets are
  * also cached in localStorage so the pre-paint script can apply them instantly.
@@ -114,8 +133,19 @@ export const useStore = create<StoreState>((set, get) => ({
       set({ configLoading: false });
     }
 
-    // 2. Reconnect to Home Assistant if we have saved credentials.
-    const creds = get().creds;
+    // 2. Connect to Home Assistant. Credentials embedded in the launch URL
+    //    (e.g. a kiosk's start URL) take priority and survive localStorage
+    //    being cleared on app quit. The fragment is never sent to a server.
+    const urlCreds = credsFromUrl();
+    const creds = urlCreds ?? get().creds;
+    if (urlCreds) {
+      // Remove the token from the address bar / history once consumed.
+      try {
+        history.replaceState(null, "", window.location.pathname);
+      } catch {
+        /* ignore */
+      }
+    }
     if (creds) {
       await get().connect(creds);
     }
