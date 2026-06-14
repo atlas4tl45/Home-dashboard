@@ -1,15 +1,17 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { GreetingHeader } from "@/components/GreetingHeader";
 import { HomeScenes } from "@/components/home/HomeScenes";
 import { HomeSecurity } from "@/components/home/HomeSecurity";
 import { HomeCameras } from "@/components/home/HomeCameras";
 import { HomeMusic } from "@/components/home/HomeMusic";
+import { SystemPanel } from "@/components/SystemPanel";
 import { useStore } from "@/store/useStore";
 import { domainOf, friendlyName } from "@/lib/entities";
 import type { HassEntity } from "@/types";
 
 export function Home() {
   const entities = useStore((s) => s.entities);
+  const [sysOpen, setSysOpen] = useState(false);
 
   const { alarms, cameras, scenes, players } = useMemo(() => {
     const g = {
@@ -52,7 +54,8 @@ export function Home() {
 
   return (
     <>
-      <GreetingHeader />
+      <GreetingHeader onReveal={() => setSysOpen(true)} />
+      <SystemPanel open={sysOpen} onClose={() => setSysOpen(false)} />
 
       {scenes.length > 0 && (
         <section className="mb-6">

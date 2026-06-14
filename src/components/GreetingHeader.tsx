@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useStore } from "@/store/useStore";
 import { weatherDisplay } from "@/lib/weather";
 import { domainOf } from "@/lib/entities";
+
+const TRIPLE_TAP_MS = 700;
 
 function greeting(d: Date): string {
   const h = d.getHours();
@@ -11,8 +13,11 @@ function greeting(d: Date): string {
   return "Good evening";
 }
 
-/** HaCasa-style hero: time-based greeting, live clock, and current weather. */
-export function GreetingHeader() {
+/**
+ * HaCasa-style hero: time-based greeting, live clock, and current weather.
+ * Triple-tapping the clock reveals the hidden system/settings panel.
+ */
+export function GreetingHeader({ onReveal }: { onReveal?: () => void }) {
   const weatherId = useStore((s) => s.config?.weatherEntity);
   const entities = useStore((s) => s.entities);
   // Use the configured entity, else auto-detect the first weather.* entity.
@@ -37,6 +42,18 @@ export function GreetingHeader() {
   const temp = weather?.attributes?.temperature;
   const unit = weather?.attributes?.temperature_unit ?? "°";
   const { Icon, label } = weatherDisplay(weather?.state);
+
+  // Hidden gesture: three taps on the clock within a short window.
+  const taps = useRef<number[]>([]);
+  const onClockTap = () => {
+    const t = Date.now();
+    taps.current = taps.current.filter((p) => t - p < TRIPLE_TAP_MS);
+    taps.current.push(t);
+    if (taps.current.length >= 3) {
+      taps.current = [];
+      onReveal?.();
+    }
+  };
 
   return (
     <header className="mb-6 flex flex-wrap items-center justify-between gap-4">
@@ -63,7 +80,13 @@ export function GreetingHeader() {
           </div>
         )}
         <div className="text-right leading-none">
-          <div className="text-2xl font-semibold tabular-nums sm:text-3xl">{time}</div>
+          <div
+            onClick={onClockTap}
+            className="cursor-default select-none text-2xl font-semibold tabular-nums sm:text-3xl"
+            title=""
+          >
+            {time}
+          </div>
         </div>
       </div>
     </header>

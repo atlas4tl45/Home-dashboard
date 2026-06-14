@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { Home, Plus, Settings } from "lucide-react";
+import { Home, Plus } from "lucide-react";
 import { useStore } from "@/store/useStore";
 import { RoomIcon } from "@/lib/icons";
 import { ThemeToggle } from "./ThemeToggle";
@@ -68,13 +68,6 @@ export function Rail({ onAddRoom }: RailProps) {
           <span className={`h-2 w-2 rounded-full ${STATUS_STYLES[status] ?? "bg-muted"}`} />
         </span>
         <ThemeToggle />
-        <NavLink to="/settings" className={itemClass} title="Settings" aria-label="Settings">
-          {({ isActive }) => (
-            <RailButton active={isActive}>
-              <Settings className="h-5 w-5" />
-            </RailButton>
-          )}
-        </NavLink>
       </div>
     </nav>
   );
