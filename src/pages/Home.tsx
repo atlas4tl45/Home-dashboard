@@ -23,11 +23,9 @@ export function Home() {
       friendlyName(a).localeCompare(friendlyName(b));
     const pick = (domain: string) =>
       list.filter((e) => domainOf(e.entity_id) === domain).sort(byName);
-
     const weather =
       (weatherPref && entities[weatherPref]) ||
       list.find((e) => domainOf(e.entity_id) === "weather");
-
     return {
       alarms: pick("alarm_control_panel"),
       scenes: pick("scene"),
@@ -41,85 +39,81 @@ export function Home() {
   const forecast = useForecast(weatherId);
   const events = useCalendarEvents(calendarIds);
 
-  const hasMid = alarms.length > 0 || scenes.length > 0 || calendarIds.length > 0;
-  const hasAny = hasMid || forecast.length > 0 || cameras.length > 0;
+  const hasContent =
+    forecast.length > 0 ||
+    alarms.length > 0 ||
+    scenes.length > 0 ||
+    calendarIds.length > 0 ||
+    cameras.length > 0;
 
   return (
-    <div className="flex flex-col gap-8">
-      <GreetingHeader onReveal={() => setSysOpen(true)} />
-      <SystemPanel open={sysOpen} onClose={() => setSysOpen(false)} />
+    <>
+      <div className="card overflow-hidden p-5 sm:p-7">
+        <GreetingHeader onReveal={() => setSysOpen(true)} />
 
-      {forecast.length > 0 && (
-        <Zone label="Forecast">
-          <WeatherForecast days={forecast} unit={unit} />
-        </Zone>
-      )}
+        {hasContent ? (
+          <div className="mt-6 grid grid-cols-1 gap-x-8 gap-y-7 border-t border-border pt-6 sm:grid-cols-6">
+            {forecast.length > 0 && (
+              <Region label="Forecast" className="sm:col-span-6">
+                <WeatherForecast days={forecast} unit={unit} />
+              </Region>
+            )}
 
-      {hasMid && (
-        <Zone>
-          <div className="grid gap-x-10 gap-y-8 lg:grid-cols-3">
-            <div className="flex flex-col gap-8 lg:col-span-2">
-              {alarms.length > 0 && (
-                <Block label="Security">
-                  <HomeSecurity alarms={alarms} />
-                </Block>
-              )}
-              {scenes.length > 0 && (
-                <Block label="Scenes">
-                  <HomeScenes scenes={scenes} />
-                </Block>
-              )}
-            </div>
+            {alarms.length > 0 && (
+              <Region label="Security" className="sm:col-span-4">
+                <HomeSecurity alarms={alarms} />
+              </Region>
+            )}
+
             {calendarIds.length > 0 && (
-              <div className="lg:border-l lg:border-border/60 lg:pl-10">
-                <Block label="Up next">
-                  <CalendarPanel events={events} />
-                </Block>
-              </div>
+              <Region
+                label="Up next"
+                className="sm:col-span-2 sm:row-span-2 sm:border-l sm:border-border sm:pl-8"
+              >
+                <CalendarPanel events={events} />
+              </Region>
+            )}
+
+            {scenes.length > 0 && (
+              <Region label="Scenes" className="sm:col-span-4">
+                <HomeScenes scenes={scenes} />
+              </Region>
+            )}
+
+            {cameras.length > 0 && (
+              <Region label="Cameras" className="sm:col-span-6">
+                <HomeCameras cameras={cameras} />
+              </Region>
             )}
           </div>
-        </Zone>
-      )}
+        ) : (
+          <p className="mt-6 border-t border-border pt-10 pb-6 text-center text-muted">
+            Connect Home Assistant and your weather, alarm, calendar, scenes and
+            cameras will appear here.
+          </p>
+        )}
+      </div>
 
-      {cameras.length > 0 && (
-        <Zone label="Cameras">
-          <HomeCameras cameras={cameras} />
-        </Zone>
-      )}
-
-      {!hasAny && (
-        <p className="py-16 text-center text-muted">
-          Connect Home Assistant and your alarm, weather, calendar, scenes and
-          cameras will appear here.
-        </p>
-      )}
-    </div>
+      <SystemPanel open={sysOpen} onClose={() => setSysOpen(false)} />
+    </>
   );
 }
 
-/** A top-level zone separated from the previous one by a hairline rule. */
-function Zone({ label, children }: { label?: string; children: ReactNode }) {
+function Region({
+  label,
+  className,
+  children,
+}: {
+  label: string;
+  className?: string;
+  children: ReactNode;
+}) {
   return (
-    <section className="border-t border-border/60 pt-8">
-      {label && <Label>{label}</Label>}
-      {children}
-    </section>
-  );
-}
-
-function Block({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div>
-      <Label>{label}</Label>
+    <div className={className}>
+      <h2 className="mb-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted">
+        {label}
+      </h2>
       {children}
     </div>
-  );
-}
-
-function Label({ children }: { children: ReactNode }) {
-  return (
-    <h2 className="mb-4 text-xs font-semibold uppercase tracking-wider text-muted">
-      {children}
-    </h2>
   );
 }

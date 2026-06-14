@@ -73,7 +73,6 @@ export async function onRequestPut(context) {
   const next = {
     version: 1,
     theme: body.theme ?? "system",
-    accent: typeof body.accent === "string" ? body.accent : undefined,
     weatherEntity:
       typeof body.weatherEntity === "string" ? body.weatherEntity : undefined,
     rooms: body.rooms.map((r) => ({

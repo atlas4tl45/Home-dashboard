@@ -47,7 +47,7 @@ function AlarmRow({ entity, multiple }: { entity: HassEntity; multiple: boolean 
   const tint = triggered
     ? "bg-red-500/15 text-red-500"
     : armed
-      ? "bg-accent/15 text-accent"
+      ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
       : "bg-surface-2 text-muted";
   const Icon = triggered ? ShieldAlert : armed ? ShieldCheck : ShieldOff;
 

@@ -2,34 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ------------------------------------------------------------------ */
-/* Flat, minimal "HaCasa"-inspired theme: near-black surfaces in dark,  */
-/* soft light surfaces in light, large rounded tiles, gentle depth, no  */
-/* translucency. Teal accent; active tiles glow in their tone.          */
-/* ------------------------------------------------------------------ */
+/* ================================================================== */
+/* Monochrome design system. Near-grayscale surfaces and ink; color    */
+/* appears only for meaningful state (alerts, armed, connection).      */
+/* Active controls invert to solid ink. `.dark` flips the palette.     */
+/* ================================================================== */
 :root {
-  --bg: 244 246 250;
+  --bg: 246 246 247;
   --surface: 255 255 255;
-  --surface-2: 240 243 248;
-  --border: 226 230 238;
-  --content: 18 26 30;
-  --muted: 99 111 120;
-  --accent: 13 148 136; /* teal-600 */
-  --accent-fg: 255 255 255;
-  --card-shadow: 0 2px 6px rgb(20 40 60 / 0.04), 0 22px 48px -26px rgb(20 40 60 / 0.22);
+  --surface-2: 244 244 245;
+  --border: 228 228 231;
+  --content: 24 24 27;
+  --muted: 113 113 122;
+  --ink: 24 24 27; /* solid fill for active state */
+  --ink-fg: 250 250 250;
+  --card-shadow: 0 1px 2px rgb(24 24 27 / 0.04), 0 14px 32px -20px rgb(24 24 27 / 0.16);
   color-scheme: light;
 }
 
 .dark {
-  --bg: 7 9 11;
-  --surface: 20 24 28; /* ~#14181c */
-  --surface-2: 29 34 40;
-  --border: 38 44 51;
-  --content: 232 237 240;
-  --muted: 139 150 159;
-  --accent: 20 184 166; /* teal-500 */
-  --accent-fg: 255 255 255;
-  --card-shadow: 0 1px 2px rgb(0 0 0 / 0.3), 0 20px 40px -24px rgb(0 0 0 / 0.7);
+  --bg: 9 9 11;
+  --surface: 22 22 25;
+  --surface-2: 33 33 37;
+  --border: 39 39 43;
+  --content: 250 250 250;
+  --muted: 161 161 170;
+  --ink: 250 250 250;
+  --ink-fg: 24 24 27;
+  --card-shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 16px 36px -22px rgb(0 0 0 / 0.7);
   color-scheme: dark;
 }
 
@@ -68,22 +68,20 @@ body {
 @layer components {
   .card {
     background: rgb(var(--surface));
-    border-radius: 1.75rem;
-    box-shadow: var(--card-shadow);
-  }
-  /* Dark mode keeps a hairline so soft cards stay legible on the dark bg. */
-  .dark .card {
     border: 1px solid rgb(var(--border));
+    border-radius: 1.25rem;
+    box-shadow: var(--card-shadow);
   }
 
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5
-      text-sm font-medium transition-all focus:outline-none
-      focus-visible:ring-2 focus-visible:ring-accent/50 disabled:opacity-50
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5
+      text-sm font-medium transition-colors focus:outline-none
+      focus-visible:ring-2 focus-visible:ring-content/20 disabled:opacity-50
       disabled:pointer-events-none;
   }
   .btn-primary {
-    @apply btn bg-accent text-accent-fg hover:brightness-110;
+    @apply btn text-[rgb(var(--ink-fg))] hover:opacity-90;
+    background: rgb(var(--ink));
   }
   .btn-ghost {
     @apply btn text-content hover:bg-surface-2;
@@ -93,26 +91,27 @@ body {
   }
 
   .input {
-    @apply w-full rounded-2xl border border-border bg-surface-2 px-4 py-2.5
+    @apply w-full rounded-xl border border-border bg-surface px-3.5 py-2.5
       text-sm text-content placeholder:text-muted focus:outline-none
-      focus-visible:ring-2 focus-visible:ring-accent/50;
+      focus-visible:border-content/30 focus-visible:ring-2
+      focus-visible:ring-content/10;
   }
 
-  .chip {
-    @apply inline-flex items-center gap-1.5 rounded-full border border-border
-      bg-surface-2 px-2.5 py-1 text-xs font-medium text-muted;
+  /* Solid inverted chip for "active/on" indicators. */
+  .ink {
+    background: rgb(var(--ink));
+    color: rgb(var(--ink-fg));
   }
 }
 
-/* Range slider thumb (cross-browser) */
 .hd-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
   height: 20px;
   width: 20px;
   border-radius: 9999px;
-  background: #fff;
-  border: 2px solid rgb(var(--accent));
+  background: rgb(var(--surface));
+  border: 2px solid rgb(var(--content));
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
   cursor: pointer;
 }
@@ -120,8 +119,8 @@ body {
   height: 18px;
   width: 18px;
   border-radius: 9999px;
-  background: #fff;
-  border: 2px solid rgb(var(--accent));
+  background: rgb(var(--surface));
+  border: 2px solid rgb(var(--content));
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
   cursor: pointer;
 }

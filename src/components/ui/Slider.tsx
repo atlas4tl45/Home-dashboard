@@ -35,7 +35,7 @@ export function Slider({
       onKeyUp={(e) => onCommit?.(Number((e.target as HTMLInputElement).value))}
       className="hd-slider h-2 w-full cursor-pointer appearance-none rounded-full disabled:opacity-50"
       style={{
-        background: `linear-gradient(to right, rgb(var(--accent)) ${pct}%, rgb(var(--border)) ${pct}%)`,
+        background: `linear-gradient(to right, rgb(var(--ink)) ${pct}%, rgb(var(--border)) ${pct}%)`,
       }}
     />
   );

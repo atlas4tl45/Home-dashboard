@@ -2,21 +2,12 @@ import type { ReactNode } from "react";
 import { X } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-/** Active-state glow color, HaCasa-style "entity colored" tiles. */
-type Tone = "accent" | "warm";
-
-const TONE_ACTIVE: Record<Tone, string> = {
-  accent: "bg-accent text-accent-fg shadow-[0_8px_20px_-8px_rgb(var(--accent)/0.7)]",
-  warm: "bg-amber-400 text-amber-950 shadow-[0_8px_22px_-8px_rgb(251_191_36_/_0.75)]",
-};
-
 interface CardShellProps {
   icon: LucideIcon;
   name: string;
   subtitle?: string;
   active?: boolean;
   unavailable?: boolean;
-  tone?: Tone;
   /** Click handler for the icon button (e.g. quick toggle). */
   onIconClick?: () => void;
   /** Shown in edit mode to remove the entity from the room. */
@@ -30,7 +21,6 @@ export function CardShell({
   subtitle,
   active,
   unavailable,
-  tone = "accent",
   onIconClick,
   onRemove,
   children,
@@ -56,7 +46,7 @@ export function CardShell({
           onClick={onIconClick}
           disabled={!onIconClick || unavailable}
           className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl transition-colors ${
-            active ? TONE_ACTIVE[tone] : "bg-surface-2 text-muted"
+            active ? "bg-accent text-accent-fg" : "bg-surface-2 text-muted"
           } ${onIconClick && !unavailable ? "cursor-pointer hover:opacity-90" : "cursor-default"}`}
         >
           <Icon className="h-5 w-5" />

@@ -13,8 +13,9 @@ export default {
         border: "rgb(var(--border) / <alpha-value>)",
         content: "rgb(var(--content) / <alpha-value>)",
         muted: "rgb(var(--muted) / <alpha-value>)",
-        accent: "rgb(var(--accent) / <alpha-value>)",
-        "accent-fg": "rgb(var(--accent-fg) / <alpha-value>)",
+        // Monochrome: "accent" is the ink color used for active/inverted states.
+        accent: "rgb(var(--ink) / <alpha-value>)",
+        "accent-fg": "rgb(var(--ink-fg) / <alpha-value>)",
       },
       borderRadius: {
         xl: "0.875rem",
