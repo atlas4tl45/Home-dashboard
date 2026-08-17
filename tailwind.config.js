@@ -22,9 +22,9 @@ export default {
       boxShadow: {
         // Soft drop + a hairline top highlight that sells the glass edge.
         glass:
-          "0 12px 40px -12px rgb(0 0 0 / 0.45), inset 0 1px 0 rgb(255 255 255 / 0.10)",
+          "0 12px 32px -12px rgb(50 60 90 / 0.18), inset 0 1px 0 rgb(255 255 255 / 0.9)",
         "glass-lg":
-          "0 24px 70px -20px rgb(0 0 0 / 0.6), inset 0 1px 0 rgb(255 255 255 / 0.12)",
+          "0 24px 60px -18px rgb(50 60 90 / 0.28), inset 0 1px 0 rgb(255 255 255 / 0.95)",
       },
       keyframes: {
         rise: {

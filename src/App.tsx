@@ -13,9 +13,9 @@ import { SettingsView } from "@/views/SettingsView";
 function Ambient() {
   return (
     <div aria-hidden className="pointer-events-none fixed inset-0 overflow-hidden">
-      <div className="animate-drift-slow absolute -left-1/4 -top-1/4 h-[70vmax] w-[70vmax] rounded-full bg-indigo-600/25 blur-[120px]" />
-      <div className="animate-drift-slower absolute -bottom-1/4 -right-1/4 h-[60vmax] w-[60vmax] rounded-full bg-cyan-500/15 blur-[120px]" />
-      <div className="absolute left-1/3 top-1/2 h-[40vmax] w-[40vmax] rounded-full bg-violet-500/10 blur-[100px]" />
+      <div className="animate-drift-slow absolute -left-1/4 -top-1/4 h-[70vmax] w-[70vmax] rounded-full bg-sky-300/50 blur-[120px]" />
+      <div className="animate-drift-slower absolute -bottom-1/4 -right-1/4 h-[60vmax] w-[60vmax] rounded-full bg-violet-300/40 blur-[120px]" />
+      <div className="absolute left-1/3 top-1/2 h-[40vmax] w-[40vmax] rounded-full bg-rose-200/40 blur-[100px]" />
     </div>
   );
 }
@@ -54,7 +54,7 @@ export default function App() {
     content = <ConnectionLost message={error} />;
   } else {
     content = (
-      <div className="flex h-full flex-col items-center justify-center gap-4 text-white/50">
+      <div className="flex h-full flex-col items-center justify-center gap-4 text-slate-500">
         <Loader2 size={32} className="animate-spin" />
         <span className="text-[15px]">Connecting to your home…</span>
       </div>
@@ -75,23 +75,23 @@ function ConnectionLost({ message }: { message: string | null }) {
   return (
     <div className="flex h-full items-center justify-center p-6">
       <div className="glass animate-rise w-full max-w-md rounded-4xl p-8 text-center shadow-glass-lg">
-        <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-white/10 text-white/60">
+        <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-slate-900/[0.06] text-slate-500">
           <WifiOff size={26} />
         </span>
         <h1 className="mt-4 text-xl font-semibold">Can't reach your home</h1>
-        <p className="mt-2 text-[14px] leading-relaxed text-white/55">
+        <p className="mt-2 text-[14px] leading-relaxed text-slate-500">
           {message ?? "The connection to Home Assistant was lost."}
         </p>
         <div className="mt-6 flex justify-center gap-3">
           <button
             onClick={() => void reconnect().catch(() => {})}
-            className="pressable flex h-14 items-center gap-2 rounded-full bg-white/90 px-6 text-[15px] font-semibold text-slate-900"
+            className="pressable flex h-14 items-center gap-2 rounded-full bg-slate-900 px-6 text-[15px] font-semibold text-white"
           >
             <RotateCw size={17} /> Try again
           </button>
           <button
             onClick={signOut}
-            className="glass-pill pressable flex h-14 items-center gap-2 px-6 text-[15px] font-medium text-white/70"
+            className="glass-pill pressable flex h-14 items-center gap-2 px-6 text-[15px] font-medium text-slate-600"
           >
             <LogOut size={17} /> Sign out
           </button>

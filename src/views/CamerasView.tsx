@@ -17,7 +17,7 @@ export function CamerasView() {
     <ViewShell>
       <ViewHeader title="Cameras" />
       {cameras.length === 0 ? (
-        <div className="glass-soft p-8 text-center text-white/50">
+        <div className="glass-soft p-8 text-center text-slate-500">
           No cameras found in Home Assistant.
         </div>
       ) : (
@@ -61,7 +61,7 @@ function FullscreenCamera({
           draggable={false}
         />
       ) : (
-        <span className="text-white/50">{error ? "No signal" : "Loading…"}</span>
+        <span className="text-white/70">{error ? "No signal" : "Loading…"}</span>
       )}
       <span className="glass-pill absolute bottom-8 left-1/2 -translate-x-1/2 px-5 py-2.5 text-[15px] font-medium">
         {friendlyName(entity)}

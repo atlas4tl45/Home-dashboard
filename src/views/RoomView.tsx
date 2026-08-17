@@ -34,7 +34,7 @@ export function RoomView({ areaId }: { areaId: string }) {
     return (
       <ViewShell>
         <ViewHeader title="Room" leading={<BackButton />} />
-        <div className="glass-soft p-8 text-center text-white/50">
+        <div className="glass-soft p-8 text-center text-slate-500">
           This room is no longer available.
         </div>
       </ViewShell>
@@ -62,7 +62,7 @@ export function RoomView({ areaId }: { areaId: string }) {
           <>
             <BackButton />
             {room.temperature && (
-              <span className="text-2xl font-light text-white/45">
+              <span className="text-2xl font-light text-slate-400">
                 {room.temperature}
               </span>
             )}
@@ -121,7 +121,7 @@ function BackButton() {
     <button
       aria-label="Back"
       onClick={() => navigate({ name: "home" })}
-      className="glass-pill pressable flex h-11 w-11 shrink-0 items-center justify-center text-white/75"
+      className="glass-pill pressable flex h-11 w-11 shrink-0 items-center justify-center text-slate-600"
     >
       <ChevronLeft size={22} />
     </button>
@@ -136,8 +136,8 @@ function SensorChip({ entity }: { entity: HassEntity }) {
     <span
       className={`flex items-center gap-2 rounded-full px-4 py-2 text-[13px] ${
         active
-          ? "border border-amber-200/25 bg-amber-100/10 text-amber-100"
-          : "glass-soft rounded-full text-white/50"
+          ? "border border-amber-500/25 bg-amber-300/20 text-amber-800"
+          : "glass-soft rounded-full text-slate-500"
       }`}
     >
       <Icon size={14} />

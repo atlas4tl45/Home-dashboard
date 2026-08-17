@@ -45,12 +45,12 @@ export function LockTile({ entity }: { entity: HassEntity }) {
       onPointerCancel={cancelHold}
       onPointerLeave={cancelHold}
       className={`glass pressable relative min-h-[6rem] touch-none overflow-hidden p-4 transition-colors duration-200 ${
-        locked ? "" : "border-orange-200/30 bg-orange-100/10"
+        locked ? "" : "border-orange-500/25 bg-orange-300/20"
       } ${unavailable ? "opacity-40" : "cursor-pointer"}`}
     >
       {/* Hold-to-unlock progress sweep */}
       <div
-        className="absolute inset-y-0 left-0 bg-orange-200/25"
+        className="absolute inset-y-0 left-0 bg-orange-300/40"
         style={{
           width: holding ? "100%" : "0%",
           transition: holding ? `width ${HOLD_MS}ms linear` : "none",
@@ -68,7 +68,7 @@ export function LockTile({ entity }: { entity: HassEntity }) {
           <span className="block truncate text-[15px] font-medium leading-tight">
             {friendlyName(entity)}
           </span>
-          <span className="block text-[13px] text-white/50">
+          <span className="block text-[13px] text-slate-500">
             {holding ? "Hold to unlock…" : busy ? "Working…" : stateLabel(entity)}
           </span>
         </span>

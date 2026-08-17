@@ -30,7 +30,7 @@ export function SecurityView() {
 
         {locks.length > 0 && (
           <section>
-            <h2 className="mb-3 text-[15px] font-medium text-white/50">Locks</h2>
+            <h2 className="mb-3 text-[15px] font-medium text-slate-500">Locks</h2>
             <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4">
               {locks.map((lock) => (
                 <LockTile key={lock.entity_id} entity={lock} />
@@ -41,10 +41,10 @@ export function SecurityView() {
 
         {openings.length > 0 && (
           <section>
-            <h2 className="mb-3 text-[15px] font-medium text-white/50">
+            <h2 className="mb-3 text-[15px] font-medium text-slate-500">
               Doors &amp; windows
               {openCount > 0 && (
-                <span className="ml-2 text-amber-200">{openCount} open</span>
+                <span className="ml-2 text-amber-700">{openCount} open</span>
               )}
             </h2>
             <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2 xl:grid-cols-3">
@@ -55,13 +55,13 @@ export function SecurityView() {
                     key={sensor.entity_id}
                     className={`flex items-center gap-3 rounded-2xl px-4 py-3.5 ${
                       open
-                        ? "border border-amber-200/25 bg-amber-100/10"
+                        ? "border border-amber-500/25 bg-amber-300/20"
                         : "glass-soft rounded-2xl"
                     } ${isUnavailable(sensor) ? "opacity-40" : ""}`}
                   >
                     <span
                       className={`flex h-9 w-9 items-center justify-center rounded-full ${
-                        open ? "bg-amber-300 text-amber-950" : "bg-white/10 text-white/60"
+                        open ? "bg-amber-300 text-amber-950" : "bg-slate-900/[0.06] text-slate-500"
                       }`}
                     >
                       {open ? <DoorOpen size={17} /> : <DoorClosed size={17} />}
@@ -70,7 +70,7 @@ export function SecurityView() {
                       {friendlyName(sensor)}
                     </span>
                     <span
-                      className={`text-[13px] ${open ? "text-amber-200" : "text-white/45"}`}
+                      className={`text-[13px] ${open ? "text-amber-700" : "text-slate-400"}`}
                     >
                       {isUnavailable(sensor) ? "—" : open ? "Open" : "Closed"}
                     </span>

@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 html,
@@ -13,7 +13,7 @@ body,
 }
 
 body {
-  @apply bg-[#05070d] font-sans text-white/90 antialiased;
+  @apply bg-[#eef1f7] font-sans text-slate-800 antialiased;
   overflow: hidden;
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
@@ -23,15 +23,15 @@ body {
 }
 
 @layer components {
-  /* The core material: frosted panel with a hairline edge highlight. */
+  /* The core material: frosted white panel with a bright hairline edge. */
   .glass {
-    @apply rounded-3xl border border-white/10 bg-white/[0.07] shadow-glass backdrop-blur-2xl;
+    @apply rounded-3xl border border-white/70 bg-white/60 shadow-glass backdrop-blur-2xl;
   }
   .glass-soft {
-    @apply rounded-3xl border border-white/[0.07] bg-white/[0.04] shadow-glass backdrop-blur-xl;
+    @apply rounded-3xl border border-white/50 bg-white/35 shadow-glass backdrop-blur-xl;
   }
   .glass-pill {
-    @apply rounded-full border border-white/10 bg-white/[0.08] shadow-glass backdrop-blur-2xl;
+    @apply rounded-full border border-white/70 bg-white/60 shadow-glass backdrop-blur-2xl;
   }
   /* Interactive press feedback shared by every touch target. */
   .pressable {
@@ -45,11 +45,11 @@ body {
   appearance: none;
   height: 3.5rem;
   border-radius: 1.25rem;
-  border: 1px solid rgb(255 255 255 / 0.12);
+  border: 1px solid rgb(255 255 255 / 0.7);
   background: linear-gradient(
     to right,
-    rgb(255 235 190 / 0.9) var(--fill, 50%),
-    rgb(255 255 255 / 0.08) var(--fill, 50%)
+    rgb(251 191 36 / 0.85) var(--fill, 50%),
+    rgb(15 23 42 / 0.06) var(--fill, 50%)
   );
   outline: none;
   cursor: pointer;

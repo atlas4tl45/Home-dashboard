@@ -63,7 +63,7 @@ export function AlarmPanel({ entity }: { entity: HassEntity }) {
       ? "bg-emerald-300 text-emerald-950"
       : state === "arming"
         ? "bg-amber-300 text-amber-950"
-        : "bg-white/10 text-white/70";
+        : "bg-slate-900/[0.06] text-slate-600";
 
   // supported_features bits: 1 = arm home, 2 = arm away, 4 = arm night.
   const features = (entity.attributes.supported_features as number) ?? 3;
@@ -82,7 +82,7 @@ export function AlarmPanel({ entity }: { entity: HassEntity }) {
   return (
     <div
       className={`glass p-6 ${isUnavailable(entity) ? "opacity-40" : ""} ${
-        triggered ? "border-red-300/40 bg-red-400/10" : ""
+        triggered ? "border-red-500/30 bg-red-400/15" : ""
       }`}
     >
       <div className="flex items-center gap-4">
@@ -97,7 +97,7 @@ export function AlarmPanel({ entity }: { entity: HassEntity }) {
           <div className="text-xl font-semibold">
             {ALARM_LABELS[state] ?? state.replace(/_/g, " ")}
           </div>
-          <div className="text-sm text-white/50">Security system</div>
+          <div className="text-sm text-slate-500">Security system</div>
         </div>
       </div>
 
@@ -109,7 +109,7 @@ export function AlarmPanel({ entity }: { entity: HassEntity }) {
               onClick={() => request(action)}
               className={`pressable flex h-14 items-center justify-center gap-2 rounded-2xl text-[15px] font-semibold ${
                 action === "alarm_disarm"
-                  ? "col-span-full bg-white/90 text-slate-900"
+                  ? "col-span-full bg-slate-900 text-white"
                   : "glass-pill"
               }`}
             >
@@ -121,15 +121,15 @@ export function AlarmPanel({ entity }: { entity: HassEntity }) {
       ) : (
         <div className="mt-5">
           <div className="mb-3 flex items-center justify-center gap-3">
-            <span className="text-sm text-white/60">
+            <span className="text-sm text-slate-500">
               Enter code to {ACTION_LABELS[pending].toLowerCase()}
             </span>
             <span className="flex gap-2">
               {code.split("").map((_, i) => (
-                <span key={i} className="h-2.5 w-2.5 rounded-full bg-white/85" />
+                <span key={i} className="h-2.5 w-2.5 rounded-full bg-slate-900/80" />
               ))}
               {code.length === 0 && (
-                <span className="h-2.5 w-2.5 rounded-full bg-white/20" />
+                <span className="h-2.5 w-2.5 rounded-full bg-slate-900/15" />
               )}
             </span>
           </div>
@@ -150,7 +150,7 @@ export function AlarmPanel({ entity }: { entity: HassEntity }) {
           <button
             disabled={code.length === 0}
             onClick={() => run(pending, code)}
-            className="pressable mx-auto mt-3 flex h-14 w-full max-w-xs items-center justify-center rounded-2xl bg-white/90 text-[15px] font-semibold text-slate-900 disabled:opacity-30"
+            className="pressable mx-auto mt-3 flex h-14 w-full max-w-xs items-center justify-center rounded-2xl bg-slate-900 text-[15px] font-semibold text-white disabled:opacity-30"
           >
             {ACTION_LABELS[pending]}
           </button>
@@ -173,7 +173,7 @@ function KeypadButton({
     <button
       onClick={onClick}
       className={`glass-pill pressable flex h-16 items-center justify-center text-xl font-medium ${
-        dim ? "text-[13px] font-normal text-white/60" : ""
+        dim ? "text-[13px] font-normal text-slate-500" : ""
       }`}
     >
       {children}

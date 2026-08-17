@@ -30,12 +30,12 @@ export function CameraCard({
           draggable={false}
         />
       ) : (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-white/35">
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-slate-400">
           <VideoOff size={28} />
           <span className="text-sm">{error ? "No signal" : "Loading…"}</span>
         </div>
       )}
-      <span className="absolute bottom-3 left-3 rounded-full bg-black/45 px-3 py-1 text-[13px] font-medium backdrop-blur-md">
+      <span className="absolute bottom-3 left-3 rounded-full bg-black/45 px-3 py-1 text-[13px] font-medium text-white backdrop-blur-md">
         {friendlyName(entity)}
       </span>
     </div>

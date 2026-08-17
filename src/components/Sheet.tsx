@@ -13,7 +13,7 @@ export function Sheet({
 }) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-6 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/25 p-6 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
@@ -25,7 +25,7 @@ export function Sheet({
           <button
             aria-label="Close"
             onClick={onClose}
-            className="glass-pill pressable flex h-10 w-10 items-center justify-center text-white/70"
+            className="glass-pill pressable flex h-10 w-10 items-center justify-center text-slate-600"
           >
             <X size={18} />
           </button>

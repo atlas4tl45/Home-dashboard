@@ -80,13 +80,13 @@ export function LightSheet({
         className="brightness-slider w-full"
         style={{ ["--fill" as string]: `${pct}%` }}
       />
-      <div className="mt-1 text-center text-sm text-white/50">
+      <div className="mt-1 text-center text-sm text-slate-500">
         {pct === 0 ? "Off" : `${pct}%`}
       </div>
 
       {supportsColorTemp(entity) && (
         <div className="mt-5">
-          <div className="mb-2 text-[13px] font-medium text-white/50">White tones</div>
+          <div className="mb-2 text-[13px] font-medium text-slate-500">White tones</div>
           <div className="flex justify-between gap-2">
             {TEMP_PRESETS.map((preset) => (
               <button
@@ -102,10 +102,10 @@ export function LightSheet({
                 className="pressable flex flex-1 flex-col items-center gap-1.5"
               >
                 <span
-                  className="h-11 w-11 rounded-full border border-white/20"
+                  className="h-11 w-11 rounded-full border border-slate-900/10"
                   style={{ background: preset.swatch }}
                 />
-                <span className="text-[11px] text-white/55">{preset.label}</span>
+                <span className="text-[11px] text-slate-500">{preset.label}</span>
               </button>
             ))}
           </div>
@@ -114,7 +114,7 @@ export function LightSheet({
 
       {supportsColor(entity) && (
         <div className="mt-5">
-          <div className="mb-2 text-[13px] font-medium text-white/50">Colors</div>
+          <div className="mb-2 text-[13px] font-medium text-slate-500">Colors</div>
           <div className="grid grid-cols-8 gap-2">
             {COLORS.map((hex) => (
               <button
@@ -123,7 +123,7 @@ export function LightSheet({
                 onClick={() =>
                   void callService("light", "turn_on", { rgb_color: hexToRgb(hex) }, id)
                 }
-                className="pressable aspect-square rounded-full border border-white/20"
+                className="pressable aspect-square rounded-full border border-slate-900/10"
                 style={{ background: hex }}
               />
             ))}

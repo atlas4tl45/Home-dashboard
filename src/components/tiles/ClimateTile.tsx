@@ -55,7 +55,7 @@ export function ClimateTile({ entity }: { entity: HassEntity }) {
         <span
           className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${
             off || unavailable
-              ? "bg-white/10 text-white/70"
+              ? "bg-slate-900/[0.06] text-slate-600"
               : (MODE_ON_CLASSES[entity.state] ?? "bg-teal-300 text-teal-950")
           }`}
         >
@@ -65,7 +65,7 @@ export function ClimateTile({ entity }: { entity: HassEntity }) {
           <span className="block truncate text-[15px] font-medium leading-tight">
             {friendlyName(entity)}
           </span>
-          <span className="block text-[13px] text-white/50">
+          <span className="block text-[13px] text-slate-500">
             {current != null ? `Now ${current}°` : capitalize(entity.state)}
             {!off && target != null ? ` · set to ${target}°` : ""}
           </span>
@@ -77,8 +77,8 @@ export function ClimateTile({ entity }: { entity: HassEntity }) {
                   onClick={() => setMode(mode)}
                   className={`pressable rounded-full px-3 py-1 text-[12px] font-medium ${
                     entity.state === mode
-                      ? "bg-white/90 text-slate-900"
-                      : "bg-white/10 text-white/60"
+                      ? "bg-slate-900 text-white"
+                      : "bg-slate-900/[0.06] text-slate-500"
                   }`}
                 >
                   {MODE_LABELS[mode]}

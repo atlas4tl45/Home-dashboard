@@ -26,14 +26,14 @@ export function SettingsView() {
       <div className="max-w-2xl space-y-6">
         <section className="glass p-6">
           <h2 className="mb-1 text-[17px] font-semibold">Home Assistant</h2>
-          <p className="flex items-center gap-2 text-[15px] text-white/55">
+          <p className="flex items-center gap-2 text-[15px] text-slate-500">
             <span
               className={`h-2 w-2 rounded-full ${
                 status === "connected" ? "bg-emerald-300" : "bg-red-300"
               }`}
             />
             {creds ? normalizeUrl(creds.url) : "Not connected"}
-            <span className="text-white/35">
+            <span className="text-slate-400">
               · {Object.keys(entities).length} entities
             </span>
           </p>
@@ -46,7 +46,7 @@ export function SettingsView() {
             </button>
             <button
               onClick={signOut}
-              className="pressable flex h-12 items-center gap-2 rounded-full border border-red-300/25 bg-red-400/10 px-5 text-[14px] font-medium text-red-200"
+              className="pressable flex h-12 items-center gap-2 rounded-full border border-red-500/20 bg-red-500/10 px-5 text-[14px] font-medium text-red-600"
             >
               <LogOut size={16} /> Sign out
             </button>
@@ -56,7 +56,7 @@ export function SettingsView() {
         {rooms.length > 0 && (
           <section className="glass p-6">
             <h2 className="mb-1 text-[17px] font-semibold">Rooms</h2>
-            <p className="mb-4 text-[14px] text-white/50">
+            <p className="mb-4 text-[14px] text-slate-500">
               Rooms come from your Home Assistant areas. Hide any you don't
               want on this tablet.
             </p>
@@ -67,15 +67,15 @@ export function SettingsView() {
                   <button
                     key={room.area.area_id}
                     onClick={() => toggleAreaHidden(room.area.area_id)}
-                    className="pressable flex w-full items-center justify-between rounded-2xl px-3 py-3 text-left hover:bg-white/[0.05]"
+                    className="pressable flex w-full items-center justify-between rounded-2xl px-3 py-3 text-left hover:bg-slate-900/[0.04]"
                   >
-                    <span className={`text-[15px] ${hidden ? "text-white/35" : ""}`}>
+                    <span className={`text-[15px] ${hidden ? "text-slate-400" : ""}`}>
                       {room.area.name}
                     </span>
                     {hidden ? (
-                      <EyeOff size={18} className="text-white/30" />
+                      <EyeOff size={18} className="text-slate-300" />
                     ) : (
-                      <Eye size={18} className="text-white/60" />
+                      <Eye size={18} className="text-slate-500" />
                     )}
                   </button>
                 );
@@ -84,14 +84,14 @@ export function SettingsView() {
           </section>
         )}
 
-        <section className="glass-soft p-6 text-[14px] leading-relaxed text-white/50">
-          <h2 className="mb-1 text-[15px] font-semibold text-white/75">
+        <section className="glass-soft p-6 text-[14px] leading-relaxed text-slate-500">
+          <h2 className="mb-1 text-[15px] font-semibold text-slate-600">
             Wall-tablet tips
           </h2>
           <p>
             Add this page to your iPad home screen (Share → Add to Home Screen)
             for a full-screen app. Kiosk launchers can auto-connect by opening{" "}
-            <span className="text-white/70">
+            <span className="text-slate-600">
               ?url=&lt;address&gt;&amp;token=&lt;token&gt;
             </span>
             . In iPadOS, use Guided Access to pin the dashboard on the wall.

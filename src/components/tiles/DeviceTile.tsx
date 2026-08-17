@@ -28,24 +28,24 @@ interface Accent {
 
 const ACCENTS: Record<string, Accent> = {
   light: {
-    tileOn: "border-amber-200/25 bg-amber-100/10",
+    tileOn: "border-amber-500/25 bg-amber-300/20",
     iconOn: "bg-amber-300 text-amber-950",
-    fill: "bg-amber-300/25",
+    fill: "bg-amber-300/40",
   },
   fan: {
-    tileOn: "border-cyan-200/25 bg-cyan-100/10",
+    tileOn: "border-cyan-500/25 bg-cyan-300/20",
     iconOn: "bg-cyan-300 text-cyan-950",
-    fill: "bg-cyan-200/20",
+    fill: "bg-cyan-300/30",
   },
   switch: {
-    tileOn: "border-emerald-200/25 bg-emerald-100/10",
+    tileOn: "border-emerald-500/25 bg-emerald-300/20",
     iconOn: "bg-emerald-300 text-emerald-950",
-    fill: "bg-emerald-200/20",
+    fill: "bg-emerald-300/30",
   },
   cover: {
-    tileOn: "border-sky-200/25 bg-sky-100/10",
+    tileOn: "border-sky-500/25 bg-sky-300/20",
     iconOn: "bg-sky-300 text-sky-950",
-    fill: "bg-sky-200/20",
+    fill: "bg-sky-300/30",
   },
 };
 
@@ -224,7 +224,7 @@ export function DeviceTile({ entity, onLongPress }: Props) {
       <div className="relative flex h-full flex-col justify-between gap-3">
         <span
           className={`flex h-11 w-11 items-center justify-center rounded-full transition-colors duration-200 ${
-            active ? accent.iconOn : "bg-white/10 text-white/70"
+            active ? accent.iconOn : "bg-slate-900/[0.06] text-slate-600"
           }`}
         >
           <Icon size={22} strokeWidth={2} />
@@ -233,7 +233,7 @@ export function DeviceTile({ entity, onLongPress }: Props) {
           <span className="block truncate text-[15px] font-medium leading-tight">
             {friendlyName(entity)}
           </span>
-          <span className="block text-[13px] text-white/50">
+          <span className="block text-[13px] text-slate-500">
             {gesture.current?.dragging || override != null
               ? `${shownLevel}%`
               : stateLabel(entity)}
