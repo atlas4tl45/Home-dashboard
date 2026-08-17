@@ -1,87 +1,185 @@
-import type { HassEntity } from "@/types";
+// Helpers for reading and organising Home Assistant entities.
 
-/** "light.kitchen" -> "light" */
-export function domainOf(entityId: string): string {
-  return entityId.split(".")[0] ?? "";
+import type { HassEntities, HassEntity } from "home-assistant-js-websocket";
+import type { Area } from "@/lib/types";
+import type { Registry } from "@/lib/ha";
+
+export const domainOf = (entityId: string): string =>
+  entityId.slice(0, entityId.indexOf("."));
+
+export const friendlyName = (e: HassEntity): string =>
+  (e.attributes.friendly_name as string | undefined) ?? e.entity_id;
+
+export const isUnavailable = (e: HassEntity): boolean =>
+  e.state === "unavailable" || e.state === "unknown";
+
+export const isOn = (e: HassEntity): boolean => e.state === "on";
+
+/** Domains the dashboard renders as interactive room devices, in display order. */
+export const ROOM_DOMAINS = ["light", "fan", "switch", "cover", "climate", "lock"] as const;
+
+export interface Room {
+  area: Area;
+  /** Interactive devices, ordered by ROOM_DOMAINS then name. */
+  devices: HassEntity[];
+  cameras: HassEntity[];
+  /** °-value of a representative temperature sensor, if the room has one. */
+  temperature: string | null;
+  lightsOn: number;
+  lightCount: number;
 }
 
-export function friendlyName(entity: HassEntity | undefined, fallback?: string): string {
-  return (
-    entity?.attributes?.friendly_name ||
-    fallback ||
-    entity?.entity_id?.split(".")[1]?.replace(/_/g, " ") ||
-    "Unknown"
+const domainRank = new Map<string, number>(ROOM_DOMAINS.map((d, i) => [d, i]));
+
+function pickTemperature(sensors: HassEntity[]): string | null {
+  for (const s of sensors) {
+    if (
+      s.attributes.device_class === "temperature" &&
+      !isUnavailable(s) &&
+      !Number.isNaN(Number(s.state))
+    ) {
+      return `${Math.round(Number(s.state))}°`;
+    }
+  }
+  return null;
+}
+
+/** Group every visible entity into its room. Rooms with nothing usable are dropped. */
+export function buildRooms(entities: HassEntities, registry: Registry): Room[] {
+  const byArea = new Map<string, HassEntity[]>();
+  for (const entity of Object.values(entities)) {
+    if (registry.hiddenEntities.has(entity.entity_id)) continue;
+    const areaId = registry.entityArea[entity.entity_id];
+    if (!areaId) continue;
+    const list = byArea.get(areaId);
+    if (list) list.push(entity);
+    else byArea.set(areaId, [entity]);
+  }
+
+  const rooms: Room[] = [];
+  for (const area of registry.areas) {
+    const members = byArea.get(area.area_id) ?? [];
+    const devices = members
+      .filter((e) => domainRank.has(domainOf(e.entity_id)))
+      .sort((a, b) => {
+        const rank =
+          domainRank.get(domainOf(a.entity_id))! -
+          domainRank.get(domainOf(b.entity_id))!;
+        return rank !== 0 ? rank : friendlyName(a).localeCompare(friendlyName(b));
+      });
+    const cameras = members.filter((e) => domainOf(e.entity_id) === "camera");
+    if (devices.length === 0 && cameras.length === 0) continue;
+
+    const lights = devices.filter((e) => domainOf(e.entity_id) === "light");
+    rooms.push({
+      area,
+      devices,
+      cameras,
+      temperature: pickTemperature(
+        members.filter((e) => domainOf(e.entity_id) === "sensor"),
+      ),
+      lightsOn: lights.filter(isOn).length,
+      lightCount: lights.length,
+    });
+  }
+  return rooms.sort((a, b) => a.area.name.localeCompare(b.area.name));
+}
+
+/** All entities of a domain, sorted by name. */
+export function ofDomain(entities: HassEntities, domain: string): HassEntity[] {
+  return Object.values(entities)
+    .filter((e) => domainOf(e.entity_id) === domain)
+    .sort((a, b) => friendlyName(a).localeCompare(friendlyName(b)));
+}
+
+/** Doors, windows and other openings for the security screen. */
+export function openingSensors(entities: HassEntities): HassEntity[] {
+  const classes = new Set(["door", "window", "garage_door", "opening"]);
+  return ofDomain(entities, "binary_sensor").filter((e) =>
+    classes.has(e.attributes.device_class as string),
   );
 }
 
-/** Is this entity in an "on"/active state? */
-export function isActive(entity: HassEntity | undefined): boolean {
-  if (!entity) return false;
-  const s = entity.state;
-  if (["on", "open", "unlocked", "home", "playing", "active"].includes(s)) {
-    return true;
+/** Brightness as 0–100, or null when off/not dimmable. */
+export function brightnessPct(e: HassEntity): number | null {
+  const raw = e.attributes.brightness as number | undefined;
+  if (raw == null) return null;
+  return Math.round((raw / 255) * 100);
+}
+
+export function supportsBrightness(e: HassEntity): boolean {
+  const modes = (e.attributes.supported_color_modes as string[] | undefined) ?? [];
+  return modes.some((m) => m !== "onoff");
+}
+
+export function supportsColorTemp(e: HassEntity): boolean {
+  const modes = (e.attributes.supported_color_modes as string[] | undefined) ?? [];
+  return modes.includes("color_temp");
+}
+
+export function supportsColor(e: HassEntity): boolean {
+  const modes = (e.attributes.supported_color_modes as string[] | undefined) ?? [];
+  return modes.some((m) => ["hs", "rgb", "rgbw", "rgbww", "xy"].includes(m));
+}
+
+const COVER_SET_POSITION = 4;
+
+export function supportsCoverPosition(e: HassEntity): boolean {
+  return (((e.attributes.supported_features as number) ?? 0) & COVER_SET_POSITION) !== 0;
+}
+
+/** Human label for an entity's current state, tuned per domain. */
+export function stateLabel(e: HassEntity): string {
+  if (isUnavailable(e)) return "Unavailable";
+  const domain = domainOf(e.entity_id);
+  switch (domain) {
+    case "light": {
+      const pct = brightnessPct(e);
+      return isOn(e) ? (pct != null ? `On · ${pct}%` : "On") : "Off";
+    }
+    case "fan": {
+      const pct = e.attributes.percentage as number | undefined;
+      return isOn(e) ? (pct ? `On · ${Math.round(pct)}%` : "On") : "Off";
+    }
+    case "lock":
+      return e.state === "locked"
+        ? "Locked"
+        : e.state === "unlocked"
+          ? "Unlocked"
+          : capitalize(e.state);
+    case "cover": {
+      const pos = e.attributes.current_position as number | undefined;
+      if (e.state === "open" && pos != null && pos < 100) return `Open · ${pos}%`;
+      return capitalize(e.state);
+    }
+    case "climate": {
+      const target = e.attributes.temperature as number | undefined;
+      if (e.state === "off") return "Off";
+      return target != null ? `${capitalize(e.state)} · ${target}°` : capitalize(e.state);
+    }
+    case "binary_sensor": {
+      const cls = e.attributes.device_class as string | undefined;
+      if (["door", "window", "garage_door", "opening"].includes(cls ?? ""))
+        return isOn(e) ? "Open" : "Closed";
+      if (cls === "motion") return isOn(e) ? "Motion" : "Clear";
+      return isOn(e) ? "On" : "Off";
+    }
+    default:
+      return capitalize(e.state.replace(/_/g, " "));
   }
-  if (domainOf(entity.entity_id) === "climate") {
-    return s !== "off" && s !== "unavailable";
-  }
-  if (domainOf(entity.entity_id) === "alarm_control_panel") {
-    return s.startsWith("armed");
-  }
-  return false;
 }
 
-export function isUnavailable(entity: HassEntity | undefined): boolean {
-  return !entity || entity.state === "unavailable" || entity.state === "unknown";
+export function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-/** brightness (0-255) -> percent 0-100 */
-export function brightnessToPct(brightness?: number): number {
-  if (brightness == null) return 0;
-  return Math.round((brightness / 255) * 100);
-}
-
-export function pctToBrightness(pct: number): number {
-  return Math.round((pct / 100) * 255);
-}
-
-/** Human label for an entity's current state. */
-export function stateLabel(entity: HassEntity | undefined): string {
-  if (!entity) return "Unavailable";
-  const uom = entity.attributes?.unit_of_measurement;
-  const s = entity.state;
-  if (s === "unavailable") return "Unavailable";
-  if (s === "unknown") return "Unknown";
-  const pretty = s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, " ");
-  return uom ? `${s} ${uom}` : pretty;
-}
-
-/** Domains that have a dedicated interactive card. */
-export const CARD_DOMAINS = new Set([
-  "light",
-  "switch",
-  "climate",
-  "lock",
-  "camera",
-  "alarm_control_panel",
-  "cover",
-  "fan",
-  "scene",
-  "media_player",
-  "sensor",
-  "binary_sensor",
-]);
-
-export const DOMAIN_LABELS: Record<string, string> = {
-  light: "Light",
-  switch: "Switch",
-  climate: "Climate",
-  lock: "Lock",
-  camera: "Camera",
-  alarm_control_panel: "Alarm",
-  cover: "Cover",
-  fan: "Fan",
-  scene: "Scene",
-  sensor: "Sensor",
-  binary_sensor: "Binary Sensor",
-  media_player: "Media Player",
+export const ALARM_LABELS: Record<string, string> = {
+  disarmed: "Disarmed",
+  armed_home: "Armed · Home",
+  armed_away: "Armed · Away",
+  armed_night: "Armed · Night",
+  armed_vacation: "Armed · Vacation",
+  arming: "Arming…",
+  pending: "Alarm pending…",
+  triggered: "ALARM TRIGGERED",
 };

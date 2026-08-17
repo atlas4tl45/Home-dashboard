@@ -1,178 +1,71 @@
-# Home Dashboard
+# Home
 
-A sleek, modern dashboard for your **Home Assistant** instance — control
-lighting, climate, locks, cameras and your alarm system from clean per-room
-views, with a built-in UI for adding/removing entities and dark/light themes.
+A wall-mounted [Home Assistant](https://www.home-assistant.io/) dashboard for
+iPads (iPad mini through 13″), with a clean, modern glass aesthetic — frosted
+panels over a soft ambient glow, big touch targets, and interactions anyone in
+the house can figure out at a glance.
 
-![status](https://img.shields.io/badge/status-alpha-blue)
+## What it does
 
-## Features
+- **Rooms, automatically.** The dashboard reads your Home Assistant areas and
+  builds a room grid on its own — no YAML, no card editors. Assign devices to
+  areas in HA and they appear.
+- **Lights & fans.** Tap a tile to toggle; drag across it to dim or set speed
+  (the tile fills like iOS Control Center). Long-press a color bulb for white
+  tones and colors.
+- **Switches & covers.** Tap to toggle, drag to set shade position.
+- **Climate.** Current temperature, big +/− target steppers, mode chips.
+- **Locks.** One tap to lock; press-and-hold to unlock, so a stray brush of
+  the wall tablet never opens the house.
+- **Alarm.** Arm Home / Away / Night and disarm, with a glass keypad when your
+  panel requires a code.
+- **Cameras.** Live stills for every camera, tap for full screen.
+- **Security at a glance.** Door and window sensors, with open ones surfaced.
+- **Home screen.** Time, date, weather, alarm state, one-tap scenes, and every
+  room with its temperature and lights-on count.
 
-- **Per-room views** — organise entities into rooms with custom names & icons.
-- **First-class controls** for the things that matter:
-  - 💡 **Lights** — on/off + brightness
-  - 🔌 **Switches / Fans** — on/off + fan speed
-  - 🌡️ **Climate** — setpoint and HVAC mode
-  - 🔒 **Locks** — lock / unlock with live state
-  - 📷 **Cameras** — auto-refreshing snapshots
-  - 🛡️ **Alarm panel** — arm (home/away/night) & disarm, with code support
-  - 🪟 **Covers**, plus read-only **sensors / binary sensors**
-- **Entity manager** — search every entity in Home Assistant and add/remove it
-  from a room in a couple of taps.
-- **Dark / light / system** theme, applied before first paint (no flash).
-- **Config syncs across devices** — rooms, layout and theme are stored
-  server-side as JSON, so your phone and desktop stay in sync.
-- **Responsive** — works as a wall tablet, phone, or desktop dashboard.
-
-## Architecture
-
-```
-┌─────────────┐   WebSocket (long-lived token)   ┌────────────────┐
-│   Browser   │ ───────────────────────────────► │ Home Assistant │
-│  (React)    │ ◄─── live entity state ───────── │                │
-└──────┬──────┘                                   └────────────────┘
-       │  GET/PUT /api/config (rooms, theme)
-       ▼
-┌─────────────┐
-│  Express    │  stores dashboard layout as JSON
-│  backend    │  (server/data/config.json)
-└─────────────┘
-```
-
-- The **browser talks to Home Assistant directly** over the official
-  [`home-assistant-js-websocket`](https://github.com/home-assistant/home-assistant-js-websocket)
-  client, authenticating with a long-lived access token kept in your browser.
-- The **Express backend never sees your Home Assistant URL or token.** It only
-  stores dashboard config (rooms / entities / theme) so it can sync across
-  devices.
-
-**Stack:** React + Vite + TypeScript, Tailwind CSS, Zustand, Express.
-
-## Getting started
-
-### Prerequisites
-
-- Node.js 20+
-- A Home Assistant instance reachable from the device running the dashboard
-- A **long-lived access token**: in Home Assistant go to your profile →
-  *Security* → *Long-lived access tokens* → *Create token*.
-
-### Develop
+## Quick start
 
 ```bash
 npm install
 npm run dev
 ```
 
-This starts the Vite dev server on **http://localhost:5173** and the config API
-on **http://localhost:3001** (Vite proxies `/api` to it). Open the app, paste
-your Home Assistant URL and token, and you're connected.
+Open the printed URL from the tablet, enter your Home Assistant address and a
+long-lived access token (HA → Profile → Security → Long-lived access tokens),
+and you're done.
 
-### Production build
+### Production
 
 ```bash
-npm run build   # outputs static assets to dist/
-npm start       # Express serves dist/ and the config API on :3001
+npm run build       # static site in dist/
 ```
 
-Then open **http://localhost:3001**. Set `PORT` to change the port.
+`dist/` is a fully static SPA — host it anywhere (Cloudflare Pages, Netlify,
+nginx, or Home Assistant's own `www/` folder). The browser talks to Home
+Assistant directly over its WebSocket API.
 
-### Deploy to Cloudflare Pages (or any static host)
+If the dashboard is served from a different origin than Home Assistant over
+**https**, HA must also be reachable over https (browsers block mixed
+content), and you may need to allow the origin in `configuration.yaml`:
 
-The dashboard runs fine as a **pure static site** — there's no backend to host.
-When no `/api/config` backend is present, it stores your rooms/layout/theme in
-the browser's `localStorage` instead (per-device rather than synced).
-
-In the Cloudflare Pages project settings, use:
-
-| Setting               | Value           |
-| --------------------- | --------------- |
-| **Build command**     | `npm run build` |
-| **Build output dir**  | `dist`          |
-| **Node version**      | `20` (or newer) |
-
-> **White page after deploy?** It almost always means Cloudflare served the
-> repository's source `index.html` (which points at `/src/main.tsx`, a dev-only
-> file) instead of the built app. Make sure the **build command** and **output
-> directory** above are set so Cloudflare builds `dist/` — `dist/` is
-> git-ignored on purpose, so Cloudflare must build it. The included
-> `public/_redirects` handles SPA deep links automatically.
-
-#### Sync across devices on Cloudflare (free, with KV)
-
-To make your rooms/layout sync across devices while staying entirely on the
-free Pages tier, the project ships a Pages Function (`functions/api/config.js`)
-backed by **Cloudflare KV**. One-time setup:
-
-1. **Create a KV namespace** — Cloudflare dashboard → *Workers & Pages* → *KV*
-   → *Create a namespace* (e.g. `home-dashboard`).
-2. **Bind it to your Pages project** — your Pages project → *Settings* →
-   *Functions* → *KV namespace bindings* → *Add binding*:
-   - Variable name: **`DASHBOARD_KV`**
-   - KV namespace: the one you just created
-3. **Redeploy** (Deployments → Retry/Redeploy, or push a commit).
-
-That's it — `GET/PUT /api/config` now read/write KV and every device shares the
-same layout. If the binding is ever missing, the Function returns `503` and the
-app automatically falls back to per-device `localStorage`, so it never breaks.
-
-> Prefer a Node host instead? You can still run the Express server (`npm start`)
-> on a VPS, Fly.io, or a Raspberry Pi on your network and point your browser at
-> it — same `/api/config` contract.
-
-## Configuration & data
-
-- With the Node backend, dashboard layout is stored at
-  `server/data/config.json` (created on first run, git-ignored). Back this file
-  up to preserve your rooms/layout.
-- On Cloudflare Pages with the KV binding (see below), layout is stored in
-  Cloudflare KV and synced across devices.
-- On a static host with no backend/KV, layout falls back to this browser's
-  `localStorage` (`hd.config`) — per-device rather than synced.
-- Your Home Assistant credentials live only in the browser's `localStorage`
-  (`hd.creds`) and are never sent to the backend. Use **Settings → Disconnect**
-  to remove them.
-
-## Kiosk / wall-tablet use
-
-- **Hidden settings:** Settings isn't shown in the nav. **Triple-tap the clock**
-  on the home screen to open the system panel (connectivity, reload, reconnect,
-  open settings) — this keeps casual taps from changing your setup.
-- **Auto-connect (survives storage wipes):** Some kiosk browsers clear
-  `localStorage` on quit, which would otherwise force you to re-enter your
-  token. Point the kiosk's start URL at the dashboard with credentials in the
-  hash fragment and it connects automatically every launch:
-
-  ```
-  https://your-dashboard/#ha_url=http://homeassistant.local:8123&token=YOUR_LONG_LIVED_TOKEN
-  ```
-
-  The fragment (`#…`) is never sent to any server. The app consumes it on load
-  and removes it from the address bar. (Alternatively, disable "clear cache on
-  exit" in your kiosk browser so the saved token persists.)
-
-## Project layout
-
-```
-server/index.js          Express config API + static server
-src/
-  api/ha.ts              Home Assistant WebSocket wrapper
-  api/config.ts          Backend config client
-  store/useStore.ts      Zustand store (connection, entities, config)
-  lib/                   entity + icon helpers
-  components/
-    cards/               one card per domain (light, climate, lock, …)
-    layout/              app shell, icon rail, theme toggle
-    ui/                  modal, toggle, slider
-    ConnectionSetup.tsx  onboarding
-    EntityPicker.tsx     add/remove entities
-  pages/                 RoomView, Settings
+```yaml
+http:
+  cors_allowed_origins:
+    - https://your-dashboard.example
 ```
 
-## Notes & limitations
+## Wall-tablet setup (iPad)
 
-- Camera cards show periodically-refreshed snapshots via Home Assistant's
-  signed `camera_proxy` URLs (works without exposing your token in markup).
-  Live HLS streaming is not yet wired up.
-- The dashboard is designed for trusted local-network use. If exposing it
-  publicly, put it behind your own authenticated reverse proxy.
+1. Open the dashboard in Safari → Share → **Add to Home Screen** for a
+   full-screen app with no browser chrome.
+2. Kiosk launchers can auto-connect by opening
+   `https://your-dashboard/?url=<ha-address>&token=<token>` — credentials are
+   stored on-device and stripped from the address bar.
+3. Use **Guided Access** (Settings → Accessibility) to pin the app.
+4. Settings → Display & Brightness → **Auto-Lock: Never** while charging.
+
+## Stack
+
+React 18 + TypeScript + Vite + Tailwind, `home-assistant-js-websocket` for
+live state, Zustand for app state. No backend, no database, no config files.

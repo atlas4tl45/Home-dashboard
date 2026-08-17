@@ -2,9 +2,8 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "node:path";
 
-// During development the Vite dev server (5173) proxies the config API to the
-// Express backend (3001). In production the Express server serves the built
-// assets directly, so no proxy is needed.
+// Pure static SPA — the browser talks to Home Assistant directly over its
+// WebSocket API, so there's no backend to proxy to.
 export default defineConfig({
   plugins: [react()],
   resolve: {
@@ -14,12 +13,7 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    proxy: {
-      "/api": {
-        target: "http://localhost:3001",
-        changeOrigin: true,
-      },
-    },
+    host: true,
   },
   build: {
     outDir: "dist",

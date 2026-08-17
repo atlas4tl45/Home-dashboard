@@ -1,31 +1,23 @@
 {
   "name": "home-dashboard",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "A sleek, modern dashboard for Home Assistant — lighting, climate, locks, cameras and alarm control with per-room views.",
+  "description": "A wall-mounted Home Assistant dashboard for iPads — glass aesthetic, rooms from your HA areas, lights, fans, cameras, alarm and locks.",
   "scripts": {
-    "dev": "concurrently -n server,client -c blue,green \"npm:dev:server\" \"npm:dev:client\"",
-    "dev:client": "vite",
-    "dev:server": "node --watch server/index.js",
+    "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview",
-    "start": "node server/index.js",
+    "preview": "vite preview --host",
     "lint": "eslint . --ext ts,tsx"
   },
   "dependencies": {
-    "compression": "^1.7.4",
-    "express": "^4.19.2",
     "home-assistant-js-websocket": "^9.4.0",
     "lucide-react": "^0.408.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.25.1",
     "zustand": "^4.5.4"
   },
   "devDependencies": {
-    "@types/compression": "^1.7.5",
-    "@types/express": "^4.17.21",
     "@types/node": "^20.14.11",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
@@ -33,7 +25,6 @@
     "@typescript-eslint/parser": "^7.16.1",
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.19",
-    "concurrently": "^8.2.2",
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.2",
     "eslint-plugin-react-refresh": "^0.4.7",
