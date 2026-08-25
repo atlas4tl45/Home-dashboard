@@ -112,6 +112,22 @@ export function isDisplayable(e: HassEntity): boolean {
   return false;
 }
 
+/**
+ * Resolve a whole-home feature selection to an entity.
+ * undefined selection = automatic (first healthy entity of the domain);
+ * "none" = feature disabled; otherwise the chosen entity_id.
+ */
+export function resolveFeature(
+  entities: HassEntities,
+  selection: string | undefined,
+  domain: string,
+): HassEntity | undefined {
+  if (selection === "none") return undefined;
+  if (selection) return entities[selection];
+  const all = ofDomain(entities, domain);
+  return all.find((e) => !isUnavailable(e)) ?? all[0];
+}
+
 /** Entities that make sense inside a room (everything a room view renders). */
 export function isRoomAssignable(e: HassEntity): boolean {
   const domain = domainOf(e.entity_id);

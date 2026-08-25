@@ -1,8 +1,8 @@
 // Editor for a tablet-created room: rename it and pick which devices live in
 // it. Assigning a device moves it out of whichever room held it before.
 
-import { useMemo } from "react";
-import { Check } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Check, Search } from "lucide-react";
 import { useStore } from "@/store/store";
 import { useEffectiveRegistry } from "@/hooks/useVisibleEntities";
 import { friendlyName, isRoomAssignable } from "@/lib/entities";
@@ -20,17 +20,32 @@ export function RoomEditor({
   const registry = useEffectiveRegistry();
   const renameRoom = useStore((s) => s.renameRoom);
   const toggleRoomEntity = useStore((s) => s.toggleRoomEntity);
+  const [query, setQuery] = useState("");
 
-  const candidates = useMemo(
-    () =>
-      Object.values(entities)
-        .filter(
-          (e) =>
-            isRoomAssignable(e) && !registry?.hiddenEntities.has(e.entity_id),
-        )
-        .sort((a, b) => friendlyName(a).localeCompare(friendlyName(b))),
-    [entities, registry],
-  );
+  const candidates = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return Object.values(entities)
+      .filter(
+        (e) =>
+          isRoomAssignable(e) && !registry?.hiddenEntities.has(e.entity_id),
+      )
+      .filter(
+        (e) =>
+          !q ||
+          friendlyName(e).toLowerCase().includes(q) ||
+          e.entity_id.toLowerCase().includes(q),
+      )
+      .sort((a, b) => {
+        // Devices already in the room float to the top so the room reads
+        // at a glance even with a large home.
+        const aIn = room?.entityIds.includes(a.entity_id) ? 0 : 1;
+        const bIn = room?.entityIds.includes(b.entity_id) ? 0 : 1;
+        return aIn !== bIn
+          ? aIn - bIn
+          : friendlyName(a).localeCompare(friendlyName(b));
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- membership order only needs to refresh when the list is refiltered
+  }, [entities, registry, query]);
 
   const areaNames = useMemo(
     () => new Map((registry?.areas ?? []).map((a) => [a.area_id, a.name])),
@@ -47,6 +62,15 @@ export function RoomEditor({
         placeholder="Room name"
         className="h-14 w-full select-text rounded-2xl border border-ink/10 bg-[color:var(--field)] px-4 text-[15px] font-medium placeholder:text-ink/45 focus:border-ink/30 focus:outline-none"
       />
+      <label className="mt-3 flex h-12 items-center gap-2.5 rounded-2xl border border-ink/10 bg-[color:var(--field)] px-4">
+        <Search size={17} className="shrink-0 text-ink/45" />
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search all devices"
+          className="w-full select-text bg-transparent text-[15px] placeholder:text-ink/45 focus:outline-none"
+        />
+      </label>
       <div className="mb-2 mt-4 text-[13px] font-medium text-ink/55">
         Devices in this room
       </div>

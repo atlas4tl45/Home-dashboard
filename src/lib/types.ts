@@ -25,6 +25,16 @@ export interface CustomRoom {
 }
 
 /**
+ * Which entity powers a whole-home feature (alarm chip, weather chip, …).
+ * Missing key = automatic (first suitable entity); "none" = feature off;
+ * anything else is a specific entity_id.
+ */
+export interface FeatureSelections {
+  alarm?: string;
+  weather?: string;
+}
+
+/**
  * The dashboard setup that syncs to the Home Assistant user profile, so a
  * kiosk that loses browser storage — or a brand-new tablet — picks it up
  * automatically on connect.
@@ -33,6 +43,7 @@ export interface TabletConfig {
   customRooms: CustomRoom[];
   hiddenAreas: string[];
   hiddenEntities: string[];
+  features: FeatureSelections;
 }
 
 export type View =

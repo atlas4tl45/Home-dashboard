@@ -9,6 +9,7 @@ import type {
   ConnectionStatus,
   Credentials,
   CustomRoom,
+  FeatureSelections,
   TabletConfig,
   Theme,
   View,
@@ -18,6 +19,7 @@ const CREDS_KEY = "glasshome.credentials";
 const HIDDEN_KEY = "glasshome.hiddenAreas";
 const HIDDEN_ENTITIES_KEY = "glasshome.hiddenEntities";
 const ROOMS_KEY = "glasshome.customRooms";
+const FEATURES_KEY = "glasshome.features";
 
 export const isCustomRoomId = (id: string): boolean => id.startsWith("room:");
 // Stored as a raw string (not JSON) — index.html reads it before first paint.
@@ -87,6 +89,8 @@ interface AppState {
   hiddenEntities: string[];
   /** Rooms created on this tablet; assignments override Home Assistant areas. */
   customRooms: CustomRoom[];
+  /** Which entity powers each whole-home feature (alarm, weather, ...). */
+  features: FeatureSelections;
   theme: Theme;
 
   connect: (creds: Credentials) => Promise<void>;
@@ -99,6 +103,10 @@ interface AppState {
   renameRoom: (roomId: string, name: string) => void;
   deleteRoom: (roomId: string) => void;
   toggleRoomEntity: (roomId: string, entityId: string) => void;
+  setFeature: (
+    feature: keyof FeatureSelections,
+    selection: string | null,
+  ) => void;
   setTheme: (theme: Theme) => void;
 }
 
@@ -129,10 +137,15 @@ function schedulePushConfig(): void {
   pushPending = true;
   window.clearTimeout(pushTimer);
   pushTimer = window.setTimeout(() => {
-    const { status, customRooms, hiddenAreas, hiddenEntities } =
+    const { status, customRooms, hiddenAreas, hiddenEntities, features } =
       useStore.getState();
     if (status !== "connected") return; // cached locally; seeded on next connect
-    const config: TabletConfig = { customRooms, hiddenAreas, hiddenEntities };
+    const config: TabletConfig = {
+      customRooms,
+      hiddenAreas,
+      hiddenEntities,
+      features,
+    };
     ha.setUserData(HA_CONFIG_KEY, config)
       .then(() => {
         pushPending = false;
@@ -147,6 +160,7 @@ function cacheConfigLocally(config: TabletConfig): void {
   saveJson(ROOMS_KEY, config.customRooms);
   saveJson(HIDDEN_KEY, config.hiddenAreas);
   saveJson(HIDDEN_ENTITIES_KEY, config.hiddenEntities);
+  saveJson(FEATURES_KEY, config.features);
 }
 
 /** Adopt the server copy of the setup; if the server has none, seed it from here. */
@@ -164,12 +178,19 @@ async function syncConfigFromServer(): Promise<void> {
         customRooms: remote.customRooms ?? [],
         hiddenAreas: remote.hiddenAreas ?? [],
         hiddenEntities: remote.hiddenEntities ?? [],
+        features: remote.features ?? {},
       };
       cacheConfigLocally(config);
       useStore.setState(config);
     } else {
-      const { customRooms, hiddenAreas, hiddenEntities } = useStore.getState();
-      if (customRooms.length || hiddenAreas.length || hiddenEntities.length) {
+      const { customRooms, hiddenAreas, hiddenEntities, features } =
+        useStore.getState();
+      if (
+        customRooms.length ||
+        hiddenAreas.length ||
+        hiddenEntities.length ||
+        Object.keys(features).length
+      ) {
         schedulePushConfig(); // first connect from this tablet seeds the profile
       }
     }
@@ -190,6 +211,7 @@ export const useStore = create<AppState>((set, get) => ({
   hiddenAreas: loadJson<string[]>(HIDDEN_KEY) ?? [],
   hiddenEntities: loadJson<string[]>(HIDDEN_ENTITIES_KEY) ?? [],
   customRooms: loadJson<CustomRoom[]>(ROOMS_KEY) ?? [],
+  features: loadJson<FeatureSelections>(FEATURES_KEY) ?? {},
   theme: loadTheme(),
 
   async connect(creds) {
@@ -241,6 +263,7 @@ export const useStore = create<AppState>((set, get) => ({
     localStorage.removeItem(ROOMS_KEY);
     localStorage.removeItem(HIDDEN_KEY);
     localStorage.removeItem(HIDDEN_ENTITIES_KEY);
+    localStorage.removeItem(FEATURES_KEY);
     set({
       creds: null,
       status: "idle",
@@ -251,6 +274,7 @@ export const useStore = create<AppState>((set, get) => ({
       customRooms: [],
       hiddenAreas: [],
       hiddenEntities: [],
+      features: {},
     });
   },
 
@@ -325,6 +349,15 @@ export const useStore = create<AppState>((set, get) => ({
     });
     saveJson(ROOMS_KEY, next);
     set({ customRooms: next });
+    schedulePushConfig();
+  },
+
+  setFeature(feature, selection) {
+    const features = { ...get().features };
+    if (selection === null) delete features[feature];
+    else features[feature] = selection;
+    saveJson(FEATURES_KEY, features);
+    set({ features });
     schedulePushConfig();
   },
 

@@ -6,6 +6,8 @@ import { useMemo, useState } from "react";
 import type { HassEntity } from "home-assistant-js-websocket";
 import {
   ChevronDown,
+  ChevronRight,
+  CloudSun,
   Eye,
   EyeOff,
   LogOut,
@@ -13,17 +15,34 @@ import {
   Pencil,
   Plus,
   RotateCw,
+  Shield,
   Sun,
   SunMoon,
   Trash2,
 } from "lucide-react";
 import { isCustomRoomId, useStore } from "@/store/store";
 import { useEffectiveRegistry } from "@/hooks/useVisibleEntities";
-import { buildRooms, friendlyName, isDisplayable } from "@/lib/entities";
+import {
+  buildRooms,
+  friendlyName,
+  isDisplayable,
+  resolveFeature,
+} from "@/lib/entities";
 import { normalizeUrl } from "@/lib/ha";
-import type { Theme } from "@/lib/types";
+import type { FeatureSelections, Theme } from "@/lib/types";
 import { RoomEditor } from "@/components/RoomEditor";
+import { EntityPickerSheet } from "@/components/EntityPickerSheet";
 import { ViewHeader, ViewShell } from "@/views/ViewShell";
+
+const FEATURES: {
+  key: keyof FeatureSelections;
+  label: string;
+  domain: string;
+  icon: typeof Shield;
+}[] = [
+  { key: "alarm", label: "Alarm system", domain: "alarm_control_panel", icon: Shield },
+  { key: "weather", label: "Weather", domain: "weather", icon: CloudSun },
+];
 
 const THEME_OPTIONS: { value: Theme; label: string; icon: typeof Sun }[] = [
   { value: "auto", label: "Auto", icon: SunMoon },
@@ -41,6 +60,8 @@ export function SettingsView() {
   const toggleAreaHidden = useStore((s) => s.toggleAreaHidden);
   const toggleEntityHidden = useStore((s) => s.toggleEntityHidden);
   const addRoom = useStore((s) => s.addRoom);
+  const features = useStore((s) => s.features);
+  const setFeature = useStore((s) => s.setFeature);
   const deleteRoom = useStore((s) => s.deleteRoom);
   const reconnect = useStore((s) => s.reconnect);
   const signOut = useStore((s) => s.signOut);
@@ -49,6 +70,9 @@ export function SettingsView() {
 
   const [editingRoom, setEditingRoom] = useState<string | null>(null);
   const [openGroup, setOpenGroup] = useState<string | null>(null);
+  const [pickingFeature, setPickingFeature] = useState<
+    (typeof FEATURES)[number] | null
+  >(null);
 
   // Room rows: tablet rooms always listed; HA areas only when they hold devices.
   const roomInfo = useMemo(
@@ -151,6 +175,56 @@ export function SettingsView() {
                 <Icon size={16} /> {label}
               </button>
             ))}
+          </div>
+        </section>
+
+        <section className="glass p-6">
+          <h2 className="mb-1 text-[17px] font-semibold">Home features</h2>
+          <p className="mb-3 text-[14px] text-ink/55">
+            Pick which entity powers each whole-home feature.
+          </p>
+          <div className="space-y-1">
+            {FEATURES.map((feature) => {
+              const selection = features[feature.key];
+              const resolved = resolveFeature(
+                entities,
+                selection,
+                feature.domain,
+              );
+              const Icon = feature.icon;
+              const detail =
+                selection === "none"
+                  ? "Off"
+                  : selection
+                    ? resolved
+                      ? friendlyName(resolved)
+                      : `${selection} (not found)`
+                    : resolved
+                      ? `Automatic · ${friendlyName(resolved)}`
+                      : "Automatic · none found";
+              return (
+                <button
+                  key={feature.key}
+                  onClick={() => setPickingFeature(feature)}
+                  className="pressable flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left hover:bg-ink/[0.04]"
+                >
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink/[0.06] text-ink/55">
+                    <Icon size={17} />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[15px]">{feature.label}</span>
+                    <span
+                      className={`block truncate text-[12px] ${
+                        selection === "none" ? "text-ink/45" : "text-ink/55"
+                      }`}
+                    >
+                      {detail}
+                    </span>
+                  </span>
+                  <ChevronRight size={16} className="shrink-0 text-ink/30" />
+                </button>
+              );
+            })}
           </div>
         </section>
 
@@ -302,6 +376,15 @@ export function SettingsView() {
 
       {editingRoom && (
         <RoomEditor roomId={editingRoom} onClose={() => setEditingRoom(null)} />
+      )}
+      {pickingFeature && (
+        <EntityPickerSheet
+          title={pickingFeature.label}
+          domain={pickingFeature.domain}
+          selection={features[pickingFeature.key]}
+          onPick={(value) => setFeature(pickingFeature.key, value)}
+          onClose={() => setPickingFeature(null)}
+        />
       )}
     </ViewShell>
   );

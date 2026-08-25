@@ -31,9 +31,9 @@ import {
   capitalize,
   friendlyName,
   isOn,
-  isUnavailable,
   ofDomain,
   openingSensors,
+  resolveFeature,
 } from "@/lib/entities";
 import { ViewShell } from "@/views/ViewShell";
 
@@ -73,8 +73,9 @@ export function HomeView() {
         (r) => !hiddenAreas.includes(r.area.area_id),
       )
     : [];
-  const weather = ofDomain(entities, "weather").find((e) => !isUnavailable(e));
-  const alarm = ofDomain(entities, "alarm_control_panel")[0];
+  const features = useStore((s) => s.features);
+  const weather = resolveFeature(entities, features.weather, "weather");
+  const alarm = resolveFeature(entities, features.alarm, "alarm_control_panel");
   const scenes = ofDomain(entities, "scene");
   // Glanceable status, pro-installer style: only surfaced when noteworthy.
   const lightsOn = ofDomain(entities, "light").filter(isOn).length;
