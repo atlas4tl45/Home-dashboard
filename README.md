@@ -71,8 +71,9 @@ wherever it's hosted, so all that's left is getting new files onto the host:
 - **Served from a static host?** Point it at the repo and every push
   deploys; the tablet picks it up on its own.
 
-Settings → Dashboard version shows the running build, checks the host on
-demand, and offers a force reload.
+Settings → Dashboard version shows the running build and offers **Update
+now**, which asks Home Assistant to fetch the latest release and then loads
+it — updating the wall panel from the wall panel.
 
 > Home Assistant serves `/local/` with month-long cache headers, so a
 > replaced `index.html` can otherwise linger on a tablet. The self-updater

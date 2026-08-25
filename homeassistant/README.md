@@ -10,7 +10,7 @@ it current is two hops:
    the screen is idle.
 
 Together: push code, and the wall tablet is running it within a few hours,
-untouched.
+untouched — or immediately, via **Update now** in Settings.
 
 ## Setup (once)
 
@@ -31,10 +31,14 @@ shell_command:
 
 Restart Home Assistant (Settings → System → Restart).
 
-**3. Test it by hand** in Developer Tools → Actions: run
-`shell_command.glasshome_update`. A `response.returncode` of `0` means it
-worked. Check Settings → Dashboard version on the tablet to see the new
-build (or wait for it to reload itself).
+**3. Test it from the tablet.** Settings → Dashboard version → **Update
+now**. That button calls this same `shell_command`, waits for it, then loads
+the new build — so once step 2 is done you can update from the wall, no
+computer involved. (Developer Tools → Actions →
+`shell_command.glasshome_update` works too; `returncode: 0` means success.)
+
+The button keeps the service name `glasshome_update`, so name it exactly
+that.
 
 **4. Schedule it.** Settings → Automations → Create automation → three-dot
 menu → *Edit in YAML*, then paste:

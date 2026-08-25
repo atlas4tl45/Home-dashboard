@@ -16,6 +16,7 @@ import {
   Pencil,
   Plus,
   Monitor,
+  Download,
   RefreshCw,
   RotateCw,
   Shield,
@@ -39,7 +40,7 @@ import {
   isDisplayable,
   resolveFeature,
 } from "@/lib/entities";
-import { normalizeUrl } from "@/lib/ha";
+import { callService, normalizeUrl } from "@/lib/ha";
 import { SECRET_TAPS, type Theme } from "@/lib/types";
 import {
   fetchDeployedVersion,
@@ -74,6 +75,9 @@ const SCREENSAVER_OPTIONS = [
   { value: 600_000, label: "10 min" },
   { value: 1_800_000, label: "30 min" },
 ];
+
+/** shell_command.<name> that pulls the newest build (see homeassistant/README.md). */
+const UPDATE_SERVICE = "glasshome_update";
 
 const THEME_OPTIONS: { value: Theme; label: string; icon: typeof Sun }[] = [
   { value: "auto", label: "Auto", icon: SunMoon },
@@ -111,23 +115,64 @@ export function SettingsView() {
   const [pickingScenes, setPickingScenes] = useState(false);
   const [renaming, setRenaming] = useState<string | null>(null);
   const [settingPin, setSettingPin] = useState(false);
-  const [checking, setChecking] = useState(false);
+  const [busy, setBusy] = useState<null | "checking" | "updating">(null);
   const [updateNote, setUpdateNote] = useState<string | null>(null);
 
+  /** Reload if Home Assistant is now serving a different build. */
+  async function takeNewBuild(attempts = 1): Promise<string | null> {
+    for (let attempt = 0; attempt < attempts; attempt++) {
+      const deployed = await fetchDeployedVersion();
+      if (deployed && deployed !== __BUILD_ID__) {
+        reloadWithVersion(deployed);
+        return deployed;
+      }
+      if (attempt < attempts - 1) {
+        await new Promise((resolve) => window.setTimeout(resolve, 1000));
+      }
+    }
+    return null;
+  }
+
   async function checkForUpdate() {
-    setChecking(true);
+    setBusy("checking");
     setUpdateNote(null);
     const deployed = await fetchDeployedVersion();
-    setChecking(false);
     if (deployed && deployed !== __BUILD_ID__) {
-      reloadWithVersion(deployed); // newer files are on the server — take them
+      reloadWithVersion(deployed);
       return;
     }
+    setBusy(null);
     setUpdateNote(
       deployed
-        ? `Home Assistant is serving this same build (${deployed}). Copy a newer dashboard.zip into config/www/dashboard/ to update.`
+        ? `Home Assistant is serving this same build (${deployed}).`
         : "Couldn't read version.json from Home Assistant, so there's nothing to compare against.",
     );
+  }
+
+  /**
+   * Ask Home Assistant to pull the newest build from GitHub, then load it.
+   * Needs the shell_command from homeassistant/README.md.
+   */
+  async function updateNow() {
+    setBusy("updating");
+    setUpdateNote("Asking Home Assistant to fetch the latest build…");
+    try {
+      await callService("shell_command", UPDATE_SERVICE);
+    } catch (err) {
+      setBusy(null);
+      const detail =
+        err instanceof Error ? err.message : String((err as { message?: string })?.message ?? err);
+      setUpdateNote(
+        `Couldn't run shell_command.${UPDATE_SERVICE} (${detail}). Add it to configuration.yaml — see homeassistant/README.md in the repo.`,
+      );
+      return;
+    }
+    setUpdateNote("Home Assistant finished. Looking for the new build…");
+    // The files land a moment after the command returns.
+    const deployed = await takeNewBuild(5);
+    if (deployed) return; // reloading
+    setBusy(null);
+    setUpdateNote(`Already on the latest build (${__BUILD_ID__}).`);
   }
 
   // Every room is created on the tablet; list them all, even empty ones.
@@ -514,19 +559,34 @@ export function SettingsView() {
           <p className="mb-4 text-[14px] leading-relaxed text-ink/55">
             Running build{" "}
             <span className="tabular-nums text-ink/70">{__BUILD_ID__}</span>.
-            This tablet loads the dashboard from Home Assistant, so it updates
-            once a newer build has been copied into{" "}
-            <span className="text-ink/70">config/www/dashboard/</span> — it
-            picks that up on its own when the screen is idle.
+            <span className="mt-1 block">
+              <span className="text-ink/70">Update now</span> asks Home
+              Assistant to fetch the latest build from GitHub and then loads
+              it. It also happens on its own, on Home Assistant's schedule.
+            </span>
           </p>
           <div className="flex flex-wrap gap-3">
             <button
+              onClick={() => void updateNow()}
+              disabled={busy !== null || status !== "connected"}
+              className="pressable flex h-12 items-center gap-2 rounded-full bg-ink px-5 text-[14px] font-semibold text-ink-contrast disabled:opacity-40"
+            >
+              <Download
+                size={16}
+                className={busy === "updating" ? "animate-pulse" : ""}
+              />
+              {busy === "updating" ? "Updating…" : "Update now"}
+            </button>
+            <button
               onClick={() => void checkForUpdate()}
-              disabled={checking}
+              disabled={busy !== null}
               className="glass-pill pressable flex h-12 items-center gap-2 px-5 text-[14px] font-medium disabled:opacity-50"
             >
-              <RefreshCw size={16} className={checking ? "animate-spin" : ""} />
-              {checking ? "Checking…" : "Check for updates"}
+              <RefreshCw
+                size={16}
+                className={busy === "checking" ? "animate-spin" : ""}
+              />
+              {busy === "checking" ? "Checking…" : "Check for updates"}
             </button>
             <button
               onClick={() => reloadWithVersion(String(Date.now()))}
