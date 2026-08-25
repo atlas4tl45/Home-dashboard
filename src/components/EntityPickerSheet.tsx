@@ -4,7 +4,7 @@
 
 import { useMemo, useState } from "react";
 import { Ban, Check, Search, Wand2 } from "lucide-react";
-import { useStore } from "@/store/store";
+import { useNamedEntities } from "@/hooks/useVisibleEntities";
 import { domainOf, friendlyName } from "@/lib/entities";
 import { Sheet } from "@/components/Sheet";
 
@@ -32,7 +32,7 @@ type Props = SingleProps | MultiProps;
 
 export function EntityPickerSheet(props: Props) {
   const { title, domain, onClose } = props;
-  const entities = useStore((s) => s.entities);
+  const entities = useNamedEntities();
   const [query, setQuery] = useState("");
 
   const matches = useMemo(() => {

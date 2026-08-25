@@ -4,7 +4,10 @@
 import { useMemo, useState } from "react";
 import { Check, Search } from "lucide-react";
 import { useStore } from "@/store/store";
-import { useEffectiveRegistry } from "@/hooks/useVisibleEntities";
+import {
+  useEffectiveRegistry,
+  useNamedEntities,
+} from "@/hooks/useVisibleEntities";
 import { friendlyName, isRoomAssignable } from "@/lib/entities";
 import { Sheet } from "@/components/Sheet";
 
@@ -16,7 +19,7 @@ export function RoomEditor({
   onClose: () => void;
 }) {
   const room = useStore((s) => s.customRooms.find((r) => r.id === roomId));
-  const entities = useStore((s) => s.entities);
+  const entities = useNamedEntities();
   const registry = useEffectiveRegistry();
   const haRegistry = useStore((s) => s.registry);
   const renameRoom = useStore((s) => s.renameRoom);

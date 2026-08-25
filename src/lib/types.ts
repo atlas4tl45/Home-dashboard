@@ -58,6 +58,8 @@ export const DEFAULT_KIOSK: KioskSettings = {
  */
 export interface TabletConfig {
   customRooms: CustomRoom[];
+  /** Display names for this dashboard, keyed by entity_id. */
+  entityNames: Record<string, string>;
   hiddenAreas: string[];
   hiddenEntities: string[];
   features: FeatureSelections;

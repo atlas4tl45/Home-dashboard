@@ -26,7 +26,10 @@ import {
   Trash2,
 } from "lucide-react";
 import { useStore } from "@/store/store";
-import { useEffectiveRegistry } from "@/hooks/useVisibleEntities";
+import {
+  useEffectiveRegistry,
+  useNamedEntities,
+} from "@/hooks/useVisibleEntities";
 import {
   buildRooms,
   friendlyName,
@@ -40,6 +43,7 @@ import {
   reloadWithVersion,
 } from "@/hooks/useVersionWatcher";
 import { RoomEditor } from "@/components/RoomEditor";
+import { RenameSheet } from "@/components/RenameSheet";
 import { EntityPickerSheet } from "@/components/EntityPickerSheet";
 import { ViewHeader, ViewShell } from "@/views/ViewShell";
 
@@ -76,10 +80,11 @@ const THEME_OPTIONS: { value: Theme; label: string; icon: typeof Sun }[] = [
 export function SettingsView() {
   const creds = useStore((s) => s.creds);
   const status = useStore((s) => s.status);
-  const entities = useStore((s) => s.entities);
+  const entities = useNamedEntities();
   const registry = useEffectiveRegistry();
   const hiddenAreas = useStore((s) => s.hiddenAreas);
   const hiddenEntities = useStore((s) => s.hiddenEntities);
+  const entityNames = useStore((s) => s.entityNames);
   const toggleAreaHidden = useStore((s) => s.toggleAreaHidden);
   const toggleEntityHidden = useStore((s) => s.toggleEntityHidden);
   const addRoom = useStore((s) => s.addRoom);
@@ -100,6 +105,7 @@ export function SettingsView() {
     (typeof FEATURES)[number] | null
   >(null);
   const [pickingScenes, setPickingScenes] = useState(false);
+  const [renaming, setRenaming] = useState<string | null>(null);
   const [updateState, setUpdateState] = useState<
     "idle" | "checking" | "current"
   >("idle");
@@ -366,8 +372,8 @@ export function SettingsView() {
         <section className="glass p-6">
           <h2 className="mb-1 text-[17px] font-semibold">Devices</h2>
           <p className="mb-4 text-[14px] text-ink/55">
-            Temporarily hide a device you've added without removing it from
-            its room.
+            Rename a device to whatever you call it, or hide it without
+            removing it from its room.
           </p>
           <div className="space-y-1">
             {groups.map((group) => {
@@ -394,11 +400,11 @@ export function SettingsView() {
                     <div className="mb-2 space-y-0.5 pl-2">
                       {group.items.map((entity) => {
                         const hidden = hiddenEntities.includes(entity.entity_id);
+                        const renamed = entityNames[entity.entity_id] != null;
                         return (
-                          <button
+                          <div
                             key={entity.entity_id}
-                            onClick={() => toggleEntityHidden(entity.entity_id)}
-                            className="pressable flex w-full items-center justify-between gap-3 rounded-2xl px-3 py-2.5 text-left hover:bg-ink/[0.04]"
+                            className="flex items-center gap-1 rounded-2xl px-3 py-2 hover:bg-ink/[0.04]"
                           >
                             <span className="min-w-0 flex-1">
                               <span
@@ -407,15 +413,31 @@ export function SettingsView() {
                                 {friendlyName(entity)}
                               </span>
                               <span className="block truncate text-[12px] text-ink/45">
+                                {renamed ? "Renamed · " : ""}
                                 {entity.entity_id}
                               </span>
                             </span>
-                            {hidden ? (
-                              <EyeOff size={16} className="shrink-0 text-ink/30" />
-                            ) : (
-                              <Eye size={16} className="shrink-0 text-ink/55" />
-                            )}
-                          </button>
+                            <IconButton
+                              label={`Rename ${friendlyName(entity)}`}
+                              onClick={() => setRenaming(entity.entity_id)}
+                            >
+                              <Pencil size={16} />
+                            </IconButton>
+                            <IconButton
+                              label={
+                                hidden
+                                  ? `Show ${friendlyName(entity)}`
+                                  : `Hide ${friendlyName(entity)}`
+                              }
+                              onClick={() => toggleEntityHidden(entity.entity_id)}
+                            >
+                              {hidden ? (
+                                <EyeOff size={16} className="text-ink/30" />
+                              ) : (
+                                <Eye size={16} />
+                              )}
+                            </IconButton>
+                          </div>
                         );
                       })}
                     </div>
@@ -477,6 +499,9 @@ export function SettingsView() {
           onPick={(value) => setFeature(pickingFeature.key, value)}
           onClose={() => setPickingFeature(null)}
         />
+      )}
+      {renaming && (
+        <RenameSheet entityId={renaming} onClose={() => setRenaming(null)} />
       )}
       {pickingScenes && (
         <EntityPickerSheet

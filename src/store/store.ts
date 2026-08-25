@@ -31,6 +31,7 @@ const HIDDEN_ENTITIES_KEY = "glasshome.hiddenEntities";
 const ROOMS_KEY = "glasshome.customRooms";
 const FEATURES_KEY = "glasshome.features";
 const KIOSK_KEY = "glasshome.kiosk";
+const NAMES_KEY = "glasshome.entityNames";
 
 export const isCustomRoomId = (id: string): boolean => id.startsWith("room:");
 // Stored as a raw string (not JSON) — index.html reads it before first paint.
@@ -103,6 +104,8 @@ interface AppState {
   /** Which entity powers each whole-home feature (alarm, weather, ...). */
   features: FeatureSelections;
   kiosk: KioskSettings;
+  /** Display names for this dashboard, keyed by entity_id. */
+  entityNames: Record<string, string>;
   /** Camera shown full screen, if any — pauses the idle timers. */
   fullscreenCamera: string | null;
   theme: Theme;
@@ -120,6 +123,8 @@ interface AppState {
   setFeature: (feature: "alarm" | "weather", selection: string | null) => void;
   toggleSceneShown: (entityId: string) => void;
   setKiosk: (patch: Partial<KioskSettings>) => void;
+  /** Pass null to fall back to the Home Assistant name. */
+  setEntityName: (entityId: string, name: string | null) => void;
   setFullscreenCamera: (entityId: string | null) => void;
   setTheme: (theme: Theme) => void;
 }
@@ -151,8 +156,15 @@ function schedulePushConfig(): void {
   pushPending = true;
   window.clearTimeout(pushTimer);
   pushTimer = window.setTimeout(() => {
-    const { status, customRooms, hiddenAreas, hiddenEntities, features, kiosk } =
-      useStore.getState();
+    const {
+      status,
+      customRooms,
+      hiddenAreas,
+      hiddenEntities,
+      features,
+      kiosk,
+      entityNames,
+    } = useStore.getState();
     if (status !== "connected") return; // cached locally; seeded on next connect
     const config: TabletConfig = {
       customRooms,
@@ -160,6 +172,7 @@ function schedulePushConfig(): void {
       hiddenEntities,
       features,
       kiosk,
+      entityNames,
     };
     ha.setUserData(HA_CONFIG_KEY, config)
       .then(() => {
@@ -177,6 +190,7 @@ function cacheConfigLocally(config: TabletConfig): void {
   saveJson(HIDDEN_ENTITIES_KEY, config.hiddenEntities);
   saveJson(FEATURES_KEY, config.features);
   saveJson(KIOSK_KEY, config.kiosk);
+  saveJson(NAMES_KEY, config.entityNames);
 }
 
 /** Adopt the server copy of the setup; if the server has none, seed it from here. */
@@ -196,6 +210,7 @@ async function syncConfigFromServer(): Promise<void> {
         hiddenEntities: remote.hiddenEntities ?? [],
         features: remote.features ?? {},
         kiosk: { ...DEFAULT_KIOSK, ...(remote.kiosk ?? {}) },
+        entityNames: remote.entityNames ?? {},
       };
       cacheConfigLocally(config);
       useStore.setState(config);
@@ -206,7 +221,8 @@ async function syncConfigFromServer(): Promise<void> {
         customRooms.length ||
         hiddenAreas.length ||
         hiddenEntities.length ||
-        Object.keys(features).length
+        Object.keys(features).length ||
+        Object.keys(useStore.getState().entityNames).length
       ) {
         schedulePushConfig(); // first connect from this tablet seeds the profile
       }
@@ -234,6 +250,7 @@ export const useStore = create<AppState>((set, get) => ({
     ? demoFeatures
     : (loadJson<FeatureSelections>(FEATURES_KEY) ?? {}),
   kiosk: { ...DEFAULT_KIOSK, ...(loadJson<KioskSettings>(KIOSK_KEY) ?? {}) },
+  entityNames: loadJson<Record<string, string>>(NAMES_KEY) ?? {},
   fullscreenCamera: null,
   theme: loadTheme(),
 
@@ -288,6 +305,7 @@ export const useStore = create<AppState>((set, get) => ({
     localStorage.removeItem(HIDDEN_ENTITIES_KEY);
     localStorage.removeItem(FEATURES_KEY);
     localStorage.removeItem(KIOSK_KEY);
+    localStorage.removeItem(NAMES_KEY);
     set({
       creds: null,
       status: "idle",
@@ -300,6 +318,7 @@ export const useStore = create<AppState>((set, get) => ({
       hiddenEntities: [],
       features: {},
       kiosk: DEFAULT_KIOSK,
+      entityNames: {},
       fullscreenCamera: null,
     });
   },
@@ -402,6 +421,16 @@ export const useStore = create<AppState>((set, get) => ({
     const kiosk = { ...get().kiosk, ...patch };
     saveJson(KIOSK_KEY, kiosk);
     set({ kiosk });
+    schedulePushConfig();
+  },
+
+  setEntityName(entityId, name) {
+    const entityNames = { ...get().entityNames };
+    const trimmed = name?.trim();
+    if (trimmed) entityNames[entityId] = trimmed;
+    else delete entityNames[entityId];
+    saveJson(NAMES_KEY, entityNames);
+    set({ entityNames });
     schedulePushConfig();
   },
 

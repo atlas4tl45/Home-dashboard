@@ -4,12 +4,33 @@ import type { Registry } from "@/lib/ha";
 import { useStore } from "@/store/store";
 
 /**
- * Live entities minus the ones hidden on this tablet. Every display view
- * reads through this; Settings reads the raw set so hidden entities can be
- * turned back on.
+ * Every entity, with this dashboard's display names applied. Renaming is a
+ * local override — Home Assistant keeps its own name — so we rewrite
+ * friendly_name at the source and the whole UI (tiles, search, sorting,
+ * the screensaver) picks it up for free.
  */
-export function useVisibleEntities(): HassEntities {
+export function useNamedEntities(): HassEntities {
   const entities = useStore((s) => s.entities);
+  const names = useStore((s) => s.entityNames);
+  return useMemo(() => {
+    const ids = Object.keys(names);
+    if (ids.length === 0) return entities;
+    const named: HassEntities = { ...entities };
+    for (const id of ids) {
+      const entity = named[id];
+      if (!entity) continue;
+      named[id] = {
+        ...entity,
+        attributes: { ...entity.attributes, friendly_name: names[id] },
+      };
+    }
+    return named;
+  }, [entities, names]);
+}
+
+/** Named entities minus the ones hidden on this tablet. */
+export function useVisibleEntities(): HassEntities {
+  const entities = useNamedEntities();
   const hidden = useStore((s) => s.hiddenEntities);
   return useMemo(() => {
     if (hidden.length === 0) return entities;
