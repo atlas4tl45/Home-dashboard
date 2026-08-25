@@ -59,6 +59,25 @@ http:
     - https://your-dashboard.example
 ```
 
+## Keeping it updated
+
+The tablet checks for new builds on its own — on load, on wake, and every 15
+minutes — and reloads while the screen is idle. It reads those builds from
+wherever it's hosted, so all that's left is getting new files onto the host:
+
+- **Served from Home Assistant?** Set up the pull-from-GitHub updater in
+  [`homeassistant/`](homeassistant/README.md) and the whole loop is
+  hands-off.
+- **Served from a static host?** Point it at the repo and every push
+  deploys; the tablet picks it up on its own.
+
+Settings → Dashboard version shows the running build, checks the host on
+demand, and offers a force reload.
+
+> Home Assistant serves `/local/` with month-long cache headers, so a
+> replaced `index.html` can otherwise linger on a tablet. The self-updater
+> reloads through a fresh URL to sidestep that.
+
 ## Wall-tablet setup (iPad)
 
 1. Open the dashboard in Safari → Share → **Add to Home Screen** for a

@@ -106,19 +106,23 @@ export function SettingsView() {
   >(null);
   const [pickingScenes, setPickingScenes] = useState(false);
   const [renaming, setRenaming] = useState<string | null>(null);
-  const [updateState, setUpdateState] = useState<
-    "idle" | "checking" | "current"
-  >("idle");
+  const [checking, setChecking] = useState(false);
+  const [updateNote, setUpdateNote] = useState<string | null>(null);
 
   async function checkForUpdate() {
-    setUpdateState("checking");
+    setChecking(true);
+    setUpdateNote(null);
     const deployed = await fetchDeployedVersion();
+    setChecking(false);
     if (deployed && deployed !== __BUILD_ID__) {
-      reloadWithVersion(deployed);
+      reloadWithVersion(deployed); // newer files are on the server — take them
       return;
     }
-    setUpdateState("current");
-    window.setTimeout(() => setUpdateState("idle"), 4000);
+    setUpdateNote(
+      deployed
+        ? `Home Assistant is serving this same build (${deployed}). Copy a newer dashboard.zip into config/www/dashboard/ to update.`
+        : "Couldn't read version.json from Home Assistant, so there's nothing to compare against.",
+    );
   }
 
   // Every room is created on the tablet; list them all, even empty ones.
@@ -451,26 +455,35 @@ export function SettingsView() {
 
         <section className="glass p-6">
           <h2 className="mb-1 text-[17px] font-semibold">Dashboard version</h2>
-          <p className="mb-4 text-[14px] text-ink/55">
-            Build <span className="tabular-nums text-ink/70">{__BUILD_ID__}</span>.
-            This tablet checks for new builds on its own and updates itself
-            when the screen is idle.
+          <p className="mb-4 text-[14px] leading-relaxed text-ink/55">
+            Running build{" "}
+            <span className="tabular-nums text-ink/70">{__BUILD_ID__}</span>.
+            This tablet loads the dashboard from Home Assistant, so it updates
+            once a newer build has been copied into{" "}
+            <span className="text-ink/70">config/www/dashboard/</span> — it
+            picks that up on its own when the screen is idle.
           </p>
-          <button
-            onClick={() => void checkForUpdate()}
-            disabled={updateState === "checking"}
-            className="glass-pill pressable flex h-12 items-center gap-2 px-5 text-[14px] font-medium disabled:opacity-50"
-          >
-            <RefreshCw
-              size={16}
-              className={updateState === "checking" ? "animate-spin" : ""}
-            />
-            {updateState === "checking"
-              ? "Checking…"
-              : updateState === "current"
-                ? "Up to date"
-                : "Check for updates"}
-          </button>
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={() => void checkForUpdate()}
+              disabled={checking}
+              className="glass-pill pressable flex h-12 items-center gap-2 px-5 text-[14px] font-medium disabled:opacity-50"
+            >
+              <RefreshCw size={16} className={checking ? "animate-spin" : ""} />
+              {checking ? "Checking…" : "Check for updates"}
+            </button>
+            <button
+              onClick={() => reloadWithVersion(String(Date.now()))}
+              className="glass-pill pressable flex h-12 items-center gap-2 px-5 text-[14px] font-medium"
+            >
+              <RotateCw size={16} /> Force reload
+            </button>
+          </div>
+          {updateNote && (
+            <p className="mt-3 text-[13px] leading-relaxed text-ink/55">
+              {updateNote}
+            </p>
+          )}
         </section>
 
         <section className="glass-soft p-6 text-[14px] leading-relaxed text-ink/55">
