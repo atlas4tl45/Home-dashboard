@@ -15,10 +15,12 @@ import {
   Moon,
   Pencil,
   Plus,
+  Monitor,
   RefreshCw,
   RotateCw,
   Shield,
   Sparkles,
+  Home,
   Sun,
   SunMoon,
   Trash2,
@@ -51,6 +53,20 @@ const FEATURES: {
   { key: "weather", label: "Weather", domain: "weather", icon: CloudSun },
 ];
 
+const RETURN_HOME_OPTIONS = [
+  { value: 0, label: "Off" },
+  { value: 60_000, label: "1 min" },
+  { value: 120_000, label: "2 min" },
+  { value: 300_000, label: "5 min" },
+];
+
+const SCREENSAVER_OPTIONS = [
+  { value: 0, label: "Off" },
+  { value: 300_000, label: "5 min" },
+  { value: 600_000, label: "10 min" },
+  { value: 1_800_000, label: "30 min" },
+];
+
 const THEME_OPTIONS: { value: Theme; label: string; icon: typeof Sun }[] = [
   { value: "auto", label: "Auto", icon: SunMoon },
   { value: "light", label: "Light", icon: Sun },
@@ -75,6 +91,8 @@ export function SettingsView() {
   const signOut = useStore((s) => s.signOut);
   const theme = useStore((s) => s.theme);
   const setTheme = useStore((s) => s.setTheme);
+  const kiosk = useStore((s) => s.kiosk);
+  const setKiosk = useStore((s) => s.setKiosk);
 
   const [editingRoom, setEditingRoom] = useState<string | null>(null);
   const [openGroup, setOpenGroup] = useState<string | null>(null);
@@ -183,6 +201,35 @@ export function SettingsView() {
                 <Icon size={16} /> {label}
               </button>
             ))}
+          </div>
+        </section>
+
+        <section className="glass p-6">
+          <h2 className="mb-1 text-[17px] font-semibold">When idle</h2>
+          <p className="mb-4 text-[14px] text-ink/55">
+            Neither happens while you're watching a camera full screen.
+          </p>
+          <div className="space-y-4">
+            <div>
+              <div className="mb-2 flex items-center gap-2 text-[14px] text-ink/70">
+                <Home size={15} /> Return to the home screen
+              </div>
+              <SegmentedControl
+                options={RETURN_HOME_OPTIONS}
+                value={kiosk.returnHomeMs}
+                onChange={(returnHomeMs) => setKiosk({ returnHomeMs })}
+              />
+            </div>
+            <div>
+              <div className="mb-2 flex items-center gap-2 text-[14px] text-ink/70">
+                <Monitor size={15} /> Dim to a clock screensaver
+              </div>
+              <SegmentedControl
+                options={SCREENSAVER_OPTIONS}
+                value={kiosk.screensaverMs}
+                onChange={(screensaverMs) => setKiosk({ screensaverMs })}
+              />
+            </div>
           </div>
         </section>
 
@@ -442,6 +489,34 @@ export function SettingsView() {
         />
       )}
     </ViewShell>
+  );
+}
+
+function SegmentedControl({
+  options,
+  value,
+  onChange,
+}: {
+  options: { value: number; label: string }[];
+  value: number;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <div className="flex gap-2">
+      {options.map((option) => (
+        <button
+          key={option.value}
+          onClick={() => onChange(option.value)}
+          className={`pressable h-11 flex-1 rounded-full text-[14px] font-medium ${
+            value === option.value
+              ? "bg-ink text-ink-contrast"
+              : "bg-ink/[0.06] text-ink/70"
+          }`}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
   );
 }
 

@@ -224,6 +224,29 @@ export function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
+/** Home Assistant weather states are unspaced slugs; these read properly. */
+export const WEATHER_LABELS: Record<string, string> = {
+  "clear-night": "Clear",
+  cloudy: "Cloudy",
+  exceptional: "Severe",
+  fog: "Fog",
+  hail: "Hail",
+  lightning: "Thunderstorms",
+  "lightning-rainy": "Thunderstorms",
+  partlycloudy: "Partly cloudy",
+  pouring: "Heavy rain",
+  rainy: "Rain",
+  snowy: "Snow",
+  "snowy-rainy": "Sleet",
+  sunny: "Sunny",
+  windy: "Windy",
+  "windy-variant": "Windy",
+};
+
+export function weatherLabel(state: string): string {
+  return WEATHER_LABELS[state] ?? capitalize(state.replace(/[-_]/g, " "));
+}
+
 export const ALARM_LABELS: Record<string, string> = {
   disarmed: "Disarmed",
   disarming: "Disarming…",

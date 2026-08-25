@@ -51,6 +51,14 @@ export default {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0.45" },
         },
+        // Very slow wander so a static clock can't burn into the panel.
+        "screensaver-drift": {
+          "0%": { transform: "translate(-16vw, -12vh)" },
+          "25%": { transform: "translate(15vw, -7vh)" },
+          "50%": { transform: "translate(11vw, 11vh)" },
+          "75%": { transform: "translate(-13vw, 8vh)" },
+          "100%": { transform: "translate(-16vw, -12vh)" },
+        },
       },
       animation: {
         rise: "rise 0.35s cubic-bezier(0.22, 1, 0.36, 1)",
@@ -58,6 +66,7 @@ export default {
         "drift-slow": "drift 50s ease-in-out infinite alternate",
         "drift-slower": "drift 70s ease-in-out infinite alternate-reverse",
         "pulse-alert": "pulse-alert 1.1s ease-in-out infinite",
+        "screensaver-drift": "screensaver-drift 300s ease-in-out infinite",
       },
     },
   },

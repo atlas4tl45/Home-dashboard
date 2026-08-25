@@ -1,6 +1,5 @@
 // All cameras in a grid; tap one for a full-screen view with faster refresh.
 
-import { useState } from "react";
 import { X } from "lucide-react";
 import { useStore } from "@/store/store";
 import { useEffectiveRegistry, useVisibleEntities } from "@/hooks/useVisibleEntities";
@@ -11,7 +10,9 @@ import { ViewHeader, ViewShell } from "@/views/ViewShell";
 
 export function CamerasView() {
   const entities = useVisibleEntities();
-  const [fullscreen, setFullscreen] = useState<string | null>(null);
+  // Kept in the store so the idle timers know not to interrupt viewing.
+  const fullscreen = useStore((s) => s.fullscreenCamera);
+  const setFullscreen = useStore((s) => s.setFullscreenCamera);
   const registry = useEffectiveRegistry();
   const cameras = ofDomain(entities, "camera").filter(
     (e) => registry?.entityArea[e.entity_id],

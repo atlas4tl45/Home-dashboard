@@ -13,14 +13,16 @@ import {
   demoTransition,
   patchDemoState,
 } from "@/lib/demo";
-import type {
-  ConnectionStatus,
-  Credentials,
-  CustomRoom,
-  FeatureSelections,
-  TabletConfig,
-  Theme,
-  View,
+import {
+  DEFAULT_KIOSK,
+  type ConnectionStatus,
+  type Credentials,
+  type CustomRoom,
+  type FeatureSelections,
+  type KioskSettings,
+  type TabletConfig,
+  type Theme,
+  type View,
 } from "@/lib/types";
 
 const CREDS_KEY = "glasshome.credentials";
@@ -28,6 +30,7 @@ const HIDDEN_KEY = "glasshome.hiddenAreas";
 const HIDDEN_ENTITIES_KEY = "glasshome.hiddenEntities";
 const ROOMS_KEY = "glasshome.customRooms";
 const FEATURES_KEY = "glasshome.features";
+const KIOSK_KEY = "glasshome.kiosk";
 
 export const isCustomRoomId = (id: string): boolean => id.startsWith("room:");
 // Stored as a raw string (not JSON) — index.html reads it before first paint.
@@ -99,6 +102,9 @@ interface AppState {
   customRooms: CustomRoom[];
   /** Which entity powers each whole-home feature (alarm, weather, ...). */
   features: FeatureSelections;
+  kiosk: KioskSettings;
+  /** Camera shown full screen, if any — pauses the idle timers. */
+  fullscreenCamera: string | null;
   theme: Theme;
 
   connect: (creds: Credentials) => Promise<void>;
@@ -113,6 +119,8 @@ interface AppState {
   toggleRoomEntity: (roomId: string, entityId: string) => void;
   setFeature: (feature: "alarm" | "weather", selection: string | null) => void;
   toggleSceneShown: (entityId: string) => void;
+  setKiosk: (patch: Partial<KioskSettings>) => void;
+  setFullscreenCamera: (entityId: string | null) => void;
   setTheme: (theme: Theme) => void;
 }
 
@@ -143,7 +151,7 @@ function schedulePushConfig(): void {
   pushPending = true;
   window.clearTimeout(pushTimer);
   pushTimer = window.setTimeout(() => {
-    const { status, customRooms, hiddenAreas, hiddenEntities, features } =
+    const { status, customRooms, hiddenAreas, hiddenEntities, features, kiosk } =
       useStore.getState();
     if (status !== "connected") return; // cached locally; seeded on next connect
     const config: TabletConfig = {
@@ -151,6 +159,7 @@ function schedulePushConfig(): void {
       hiddenAreas,
       hiddenEntities,
       features,
+      kiosk,
     };
     ha.setUserData(HA_CONFIG_KEY, config)
       .then(() => {
@@ -167,6 +176,7 @@ function cacheConfigLocally(config: TabletConfig): void {
   saveJson(HIDDEN_KEY, config.hiddenAreas);
   saveJson(HIDDEN_ENTITIES_KEY, config.hiddenEntities);
   saveJson(FEATURES_KEY, config.features);
+  saveJson(KIOSK_KEY, config.kiosk);
 }
 
 /** Adopt the server copy of the setup; if the server has none, seed it from here. */
@@ -185,6 +195,7 @@ async function syncConfigFromServer(): Promise<void> {
         hiddenAreas: remote.hiddenAreas ?? [],
         hiddenEntities: remote.hiddenEntities ?? [],
         features: remote.features ?? {},
+        kiosk: { ...DEFAULT_KIOSK, ...(remote.kiosk ?? {}) },
       };
       cacheConfigLocally(config);
       useStore.setState(config);
@@ -222,6 +233,8 @@ export const useStore = create<AppState>((set, get) => ({
   features: isDemo
     ? demoFeatures
     : (loadJson<FeatureSelections>(FEATURES_KEY) ?? {}),
+  kiosk: { ...DEFAULT_KIOSK, ...(loadJson<KioskSettings>(KIOSK_KEY) ?? {}) },
+  fullscreenCamera: null,
   theme: loadTheme(),
 
   async connect(creds) {
@@ -274,6 +287,7 @@ export const useStore = create<AppState>((set, get) => ({
     localStorage.removeItem(HIDDEN_KEY);
     localStorage.removeItem(HIDDEN_ENTITIES_KEY);
     localStorage.removeItem(FEATURES_KEY);
+    localStorage.removeItem(KIOSK_KEY);
     set({
       creds: null,
       status: "idle",
@@ -285,6 +299,8 @@ export const useStore = create<AppState>((set, get) => ({
       hiddenAreas: [],
       hiddenEntities: [],
       features: {},
+      kiosk: DEFAULT_KIOSK,
+      fullscreenCamera: null,
     });
   },
 
@@ -380,6 +396,17 @@ export const useStore = create<AppState>((set, get) => ({
     saveJson(FEATURES_KEY, features);
     set({ features });
     schedulePushConfig();
+  },
+
+  setKiosk(patch) {
+    const kiosk = { ...get().kiosk, ...patch };
+    saveJson(KIOSK_KEY, kiosk);
+    set({ kiosk });
+    schedulePushConfig();
+  },
+
+  setFullscreenCamera(entityId) {
+    set({ fullscreenCamera: entityId });
   },
 
   setTheme(theme) {

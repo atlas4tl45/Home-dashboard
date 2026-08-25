@@ -37,6 +37,21 @@ export interface FeatureSelections {
 }
 
 /**
+ * Idle behaviour for a wall tablet. Milliseconds; 0 disables.
+ */
+export interface KioskSettings {
+  /** Go back to the home screen after this long without a touch. */
+  returnHomeMs: number;
+  /** Show the clock screensaver after this long without a touch. */
+  screensaverMs: number;
+}
+
+export const DEFAULT_KIOSK: KioskSettings = {
+  returnHomeMs: 120_000,
+  screensaverMs: 600_000,
+};
+
+/**
  * The dashboard setup that syncs to the Home Assistant user profile, so a
  * kiosk that loses browser storage — or a brand-new tablet — picks it up
  * automatically on connect.
@@ -46,6 +61,7 @@ export interface TabletConfig {
   hiddenAreas: string[];
   hiddenEntities: string[];
   features: FeatureSelections;
+  kiosk: KioskSettings;
 }
 
 export type View =

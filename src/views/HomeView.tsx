@@ -34,6 +34,7 @@ import {
   isOn,
   openingSensors,
   resolveFeature,
+  weatherLabel,
 } from "@/lib/entities";
 import { ViewShell } from "@/views/ViewShell";
 
@@ -225,7 +226,7 @@ function WeatherChip({ entity }: { entity: HassEntity }) {
     <span className="glass-pill flex items-center gap-2.5 px-5 py-3">
       <Icon size={19} className="text-ink/70" />
       <span className="text-[15px] font-medium">
-        {temp != null ? `${Math.round(temp)}${unit}` : capitalize(entity.state)}
+        {temp != null ? `${Math.round(temp)}${unit}` : weatherLabel(entity.state)}
       </span>
     </span>
   );

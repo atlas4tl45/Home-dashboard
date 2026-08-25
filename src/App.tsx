@@ -1,7 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Loader2, LogOut, RotateCw, WifiOff } from "lucide-react";
 import { useStore } from "@/store/store";
 import { useVersionWatcher } from "@/hooks/useVersionWatcher";
+import { useIdleTimeout } from "@/hooks/useIdleTimeout";
+import { Screensaver } from "@/components/Screensaver";
 import { SetupScreen } from "@/components/SetupScreen";
 import { Dock } from "@/components/Dock";
 import { HomeView } from "@/views/HomeView";
@@ -29,9 +31,31 @@ export default function App() {
   const error = useStore((s) => s.error);
   const view = useStore((s) => s.view);
   const connect = useStore((s) => s.connect);
+  const navigate = useStore((s) => s.navigate);
+  const kiosk = useStore((s) => s.kiosk);
+  const fullscreenCamera = useStore((s) => s.fullscreenCamera);
   const attempted = useRef(false);
+  const [asleep, setAsleep] = useState(false);
   // Keep a wall tablet current without anyone touching it.
   useVersionWatcher();
+
+  const live = status === "connected" && !asleep;
+  // Wander back to the home screen when someone walks away mid-task —
+  // except while they're watching cameras.
+  useIdleTimeout(
+    kiosk.returnHomeMs,
+    () => navigate({ name: "home" }),
+    live &&
+      !fullscreenCamera &&
+      view.name !== "home" &&
+      view.name !== "cameras",
+  );
+  // Then go dark, so the panel isn't lighting the hallway all night.
+  useIdleTimeout(
+    kiosk.screensaverMs,
+    () => setAsleep(true),
+    live && !fullscreenCamera,
+  );
 
   // Saved credentials (or kiosk launch params) connect automatically.
   useEffect(() => {
@@ -70,6 +94,7 @@ export default function App() {
     <div className="relative h-full">
       <Ambient />
       <div className="relative h-full">{content}</div>
+      {asleep && <Screensaver onWake={() => setAsleep(false)} />}
     </div>
   );
 }
