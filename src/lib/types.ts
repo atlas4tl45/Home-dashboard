@@ -57,9 +57,13 @@ export const DEFAULT_KIOSK: KioskSettings = {
   pin: null,
 };
 
-/** Taps on the clock that reveal a hidden Settings, and the window for them. */
+/**
+ * Taps on the clock that reveal a hidden Settings. The limit is the pause
+ * *between* taps, not a total deadline — tap at whatever pace feels natural,
+ * it only resets if you stop.
+ */
 export const SECRET_TAPS = 5;
-export const SECRET_TAP_WINDOW_MS = 3000;
+export const SECRET_TAP_GAP_MS = 1500;
 
 /**
  * The dashboard setup that syncs to the Home Assistant user profile, so a

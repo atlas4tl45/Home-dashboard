@@ -22,7 +22,7 @@ export function ViewHeader({
 }) {
   const now = useClock();
   const requestSettings = useStore((s) => s.requestSettings);
-  const onClockTap = useSecretTaps(requestSettings);
+  const { onTap: onClockTap, progress } = useSecretTaps(requestSettings);
   return (
     <div className="mb-6 flex items-center justify-between gap-4">
       <div className="flex min-w-0 items-center gap-3">
@@ -30,9 +30,11 @@ export function ViewHeader({
         <h1 className="truncate text-3xl font-semibold tracking-tight">{title}</h1>
       </div>
       <span
-        onClick={onClockTap}
+        onPointerDown={onClockTap}
         data-clock
-        className="shrink-0 cursor-default text-xl font-light tabular-nums text-ink/45"
+        className={`shrink-0 cursor-default text-xl font-light tabular-nums transition-colors ${
+          progress >= 2 ? "text-ink/70" : "text-ink/45"
+        }`}
       >
         {now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
       </span>

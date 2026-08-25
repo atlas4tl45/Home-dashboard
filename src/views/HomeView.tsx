@@ -25,6 +25,7 @@ import { useStore } from "@/store/store";
 import { useEffectiveRegistry, useVisibleEntities } from "@/hooks/useVisibleEntities";
 import { useClock } from "@/hooks/useClock";
 import { useSecretTaps } from "@/hooks/useSecretTaps";
+import { SECRET_TAPS } from "@/lib/types";
 import { callService } from "@/lib/ha";
 import {
   ALARM_LABELS,
@@ -69,7 +70,7 @@ export function HomeView() {
   const hiddenAreas = useStore((s) => s.hiddenAreas);
   const navigate = useStore((s) => s.navigate);
   const requestSettings = useStore((s) => s.requestSettings);
-  const onClockTap = useSecretTaps(requestSettings);
+  const { onTap: onClockTap, progress: tapProgress } = useSecretTaps(requestSettings);
   const now = useClock();
 
   const rooms = registry
@@ -105,7 +106,7 @@ export function HomeView() {
             {greeting(now.getHours())}
           </div>
           <div
-            onClick={onClockTap}
+            onPointerDown={onClockTap}
             data-clock
             className="mt-1 cursor-default whitespace-nowrap text-[clamp(4.5rem,10vw,7rem)] font-extralight leading-none tracking-tight tabular-nums"
           >
@@ -116,6 +117,7 @@ export function HomeView() {
               </span>
             )}
           </div>
+          <TapProgress count={tapProgress} />
           <div className="mt-2 text-[17px] text-ink/55">
             {now.toLocaleDateString([], {
               weekday: "long",
@@ -214,6 +216,23 @@ export function HomeView() {
         </div>
       </div>
     </ViewShell>
+  );
+}
+
+/** Quiet confirmation that repeated taps on the clock are landing. */
+function TapProgress({ count }: { count: number }) {
+  if (count < 2) return null;
+  return (
+    <span className="mt-2 flex gap-1.5" aria-hidden>
+      {Array.from({ length: SECRET_TAPS }, (_, i) => (
+        <span
+          key={i}
+          className={`h-1.5 w-1.5 rounded-full transition-colors ${
+            i < count ? "bg-ink/40" : "bg-ink/10"
+          }`}
+        />
+      ))}
+    </span>
   );
 }
 
