@@ -61,7 +61,7 @@ export function SecurityView() {
                   >
                     <span
                       className={`flex h-9 w-9 items-center justify-center rounded-full ${
-                        open ? "bg-amber-300 text-amber-950" : "bg-slate-900/[0.06] text-slate-500"
+                        open ? "bg-amber-400 text-white" : "bg-slate-900/[0.06] text-slate-500"
                       }`}
                     >
                       {open ? <DoorOpen size={17} /> : <DoorClosed size={17} />}

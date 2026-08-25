@@ -29,7 +29,7 @@ export function SettingsView() {
           <p className="flex items-center gap-2 text-[15px] text-slate-500">
             <span
               className={`h-2 w-2 rounded-full ${
-                status === "connected" ? "bg-emerald-300" : "bg-red-300"
+                status === "connected" ? "bg-emerald-500" : "bg-red-400"
               }`}
             />
             {creds ? normalizeUrl(creds.url) : "Not connected"}

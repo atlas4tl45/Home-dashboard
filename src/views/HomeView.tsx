@@ -10,6 +10,7 @@ import {
   CloudRain,
   CloudSnow,
   CloudSun,
+  DoorOpen,
   Lightbulb,
   Moon,
   ShieldAlert,
@@ -28,8 +29,10 @@ import {
   buildRooms,
   capitalize,
   friendlyName,
+  isOn,
   isUnavailable,
   ofDomain,
+  openingSensors,
 } from "@/lib/entities";
 import { ViewShell } from "@/views/ViewShell";
 
@@ -72,6 +75,9 @@ export function HomeView() {
   const weather = ofDomain(entities, "weather").find((e) => !isUnavailable(e));
   const alarm = ofDomain(entities, "alarm_control_panel")[0];
   const scenes = ofDomain(entities, "scene");
+  // Glanceable status, pro-installer style: only surfaced when noteworthy.
+  const lightsOn = ofDomain(entities, "light").filter(isOn).length;
+  const doorsOpen = openingSensors(entities).filter(isOn).length;
 
   const time = now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
   const meridiem = /([AP]M)$/i.exec(time)?.[1];
@@ -111,6 +117,25 @@ export function HomeView() {
                 <AlarmGlyph state={alarm.state} />
                 <span className="text-[15px] font-medium">
                   {ALARM_LABELS[alarm.state] ?? capitalize(alarm.state)}
+                </span>
+              </button>
+            )}
+            {lightsOn > 0 && (
+              <span className="glass-pill flex items-center gap-2.5 px-5 py-3">
+                <Lightbulb size={19} className="text-amber-500" />
+                <span className="text-[15px] font-medium">
+                  {lightsOn} {lightsOn === 1 ? "light" : "lights"} on
+                </span>
+              </span>
+            )}
+            {doorsOpen > 0 && (
+              <button
+                onClick={() => navigate({ name: "security" })}
+                className="glass-pill pressable flex items-center gap-2.5 px-5 py-3"
+              >
+                <DoorOpen size={19} className="text-amber-600" />
+                <span className="text-[15px] font-medium">
+                  {doorsOpen} {doorsOpen === 1 ? "door" : "doors"} open
                 </span>
               </button>
             )}
@@ -179,7 +204,7 @@ function AlarmGlyph({ state }: { state: string }) {
   if (state === "triggered" || state === "pending")
     return <ShieldAlert size={19} className="animate-pulse-alert text-red-500" />;
   if (state.startsWith("armed"))
-    return <ShieldCheck size={19} className="text-emerald-500" />;
+    return <ShieldCheck size={19} className="text-emerald-600" />;
   return <ShieldOff size={19} className="text-slate-500" />;
 }
 

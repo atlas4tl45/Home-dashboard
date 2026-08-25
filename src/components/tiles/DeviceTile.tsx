@@ -26,27 +26,24 @@ interface Accent {
   fill: string;
 }
 
+// Pro-installer palette (Control4/Savant/Crestron): surfaces stay monochrome —
+// an active tile simply turns bright white with ink icons. The one accent is
+// warm amber, reserved for lights that are actually on.
+const NEUTRAL: Accent = {
+  tileOn: "border-white/90 bg-white/85",
+  iconOn: "bg-slate-800 text-white",
+  fill: "bg-slate-900/[0.06]",
+};
+
 const ACCENTS: Record<string, Accent> = {
   light: {
-    tileOn: "border-amber-500/25 bg-amber-300/20",
+    tileOn: "border-white/90 bg-white/85",
     iconOn: "bg-amber-300 text-amber-950",
-    fill: "bg-amber-300/40",
+    fill: "bg-amber-300/35",
   },
-  fan: {
-    tileOn: "border-cyan-500/25 bg-cyan-300/20",
-    iconOn: "bg-cyan-300 text-cyan-950",
-    fill: "bg-cyan-300/30",
-  },
-  switch: {
-    tileOn: "border-emerald-500/25 bg-emerald-300/20",
-    iconOn: "bg-emerald-300 text-emerald-950",
-    fill: "bg-emerald-300/30",
-  },
-  cover: {
-    tileOn: "border-sky-500/25 bg-sky-300/20",
-    iconOn: "bg-sky-300 text-sky-950",
-    fill: "bg-sky-300/30",
-  },
+  fan: NEUTRAL,
+  switch: NEUTRAL,
+  cover: NEUTRAL,
 };
 
 function iconFor(entity: HassEntity): LucideIcon {
@@ -116,7 +113,7 @@ interface Props {
 
 export function DeviceTile({ entity, onLongPress }: Props) {
   const domain = domainOf(entity.entity_id);
-  const accent = ACCENTS[domain] ?? ACCENTS.switch;
+  const accent = ACCENTS[domain] ?? NEUTRAL;
   const Icon = iconFor(entity);
   const unavailable = isUnavailable(entity);
   const active = domain === "cover" ? entity.state === "open" : isOn(entity);

@@ -16,11 +16,12 @@ const MODE_LABELS: Record<string, string> = {
   dry: "Dry",
 };
 
+// Heat/cool keep their conventional hues (muted); everything else stays ink.
 const MODE_ON_CLASSES: Record<string, string> = {
-  heat: "bg-orange-300 text-orange-950",
-  cool: "bg-sky-300 text-sky-950",
-  heat_cool: "bg-teal-300 text-teal-950",
-  auto: "bg-teal-300 text-teal-950",
+  heat: "bg-orange-400 text-white",
+  cool: "bg-sky-500 text-white",
+  heat_cool: "bg-slate-800 text-white",
+  auto: "bg-slate-800 text-white",
 };
 
 export function ClimateTile({ entity }: { entity: HassEntity }) {
@@ -56,7 +57,7 @@ export function ClimateTile({ entity }: { entity: HassEntity }) {
           className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${
             off || unavailable
               ? "bg-slate-900/[0.06] text-slate-600"
-              : (MODE_ON_CLASSES[entity.state] ?? "bg-teal-300 text-teal-950")
+              : (MODE_ON_CLASSES[entity.state] ?? "bg-slate-800 text-white")
           }`}
         >
           <Thermometer size={22} />

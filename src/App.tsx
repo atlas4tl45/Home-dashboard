@@ -13,9 +13,9 @@ import { SettingsView } from "@/views/SettingsView";
 function Ambient() {
   return (
     <div aria-hidden className="pointer-events-none fixed inset-0 overflow-hidden">
-      <div className="animate-drift-slow absolute -left-1/4 -top-1/4 h-[70vmax] w-[70vmax] rounded-full bg-sky-300/50 blur-[120px]" />
-      <div className="animate-drift-slower absolute -bottom-1/4 -right-1/4 h-[60vmax] w-[60vmax] rounded-full bg-violet-300/40 blur-[120px]" />
-      <div className="absolute left-1/3 top-1/2 h-[40vmax] w-[40vmax] rounded-full bg-rose-200/40 blur-[100px]" />
+      <div className="animate-drift-slow absolute -left-1/4 -top-1/4 h-[70vmax] w-[70vmax] rounded-full bg-sky-200/50 blur-[120px]" />
+      <div className="animate-drift-slower absolute -bottom-1/4 -right-1/4 h-[60vmax] w-[60vmax] rounded-full bg-slate-300/40 blur-[120px]" />
+      <div className="absolute left-1/3 top-1/2 h-[40vmax] w-[40vmax] rounded-full bg-white/60 blur-[100px]" />
     </div>
   );
 }

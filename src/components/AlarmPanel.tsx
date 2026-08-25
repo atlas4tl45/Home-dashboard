@@ -58,11 +58,11 @@ export function AlarmPanel({ entity }: { entity: HassEntity }) {
         : ShieldOff;
 
   const tone = triggered
-    ? "bg-red-400 text-red-950"
+    ? "bg-red-500 text-white"
     : armed
-      ? "bg-emerald-300 text-emerald-950"
+      ? "bg-emerald-600 text-white"
       : state === "arming"
-        ? "bg-amber-300 text-amber-950"
+        ? "bg-amber-400 text-amber-950"
         : "bg-slate-900/[0.06] text-slate-600";
 
   // supported_features bits: 1 = arm home, 2 = arm away, 4 = arm night.

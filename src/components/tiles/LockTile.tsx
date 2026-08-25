@@ -45,7 +45,7 @@ export function LockTile({ entity }: { entity: HassEntity }) {
       onPointerCancel={cancelHold}
       onPointerLeave={cancelHold}
       className={`glass pressable relative min-h-[6rem] touch-none overflow-hidden p-4 transition-colors duration-200 ${
-        locked ? "" : "border-orange-500/25 bg-orange-300/20"
+        locked ? "" : "border-orange-500/30 bg-orange-200/25"
       } ${unavailable ? "opacity-40" : "cursor-pointer"}`}
     >
       {/* Hold-to-unlock progress sweep */}
@@ -59,7 +59,7 @@ export function LockTile({ entity }: { entity: HassEntity }) {
       <div className="relative flex h-full flex-col justify-between gap-3">
         <span
           className={`flex h-11 w-11 items-center justify-center rounded-full transition-colors duration-200 ${
-            locked ? "bg-emerald-300 text-emerald-950" : "bg-orange-300 text-orange-950"
+            locked ? "bg-slate-800 text-white" : "bg-orange-400 text-white"
           }`}
         >
           {locked ? <Lock size={22} /> : <LockOpen size={22} />}
