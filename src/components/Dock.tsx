@@ -16,6 +16,8 @@ interface Item {
 export function Dock() {
   const view = useStore((s) => s.view);
   const navigate = useStore((s) => s.navigate);
+  const kiosk = useStore((s) => s.kiosk);
+  const requestSettings = useStore((s) => s.requestSettings);
   const entities = useVisibleEntities();
 
   const features = useStore((s) => s.features);
@@ -34,7 +36,9 @@ export function Dock() {
     ...(hasSecurity
       ? [{ key: "security", label: "Security", icon: Shield } as Item]
       : []),
-    { key: "settings", label: "Settings", icon: Settings },
+    ...(kiosk.hideSettings
+      ? []
+      : [{ key: "settings", label: "Settings", icon: Settings } as Item]),
   ];
 
   const active = view.name === "room" ? "home" : view.name;
@@ -46,7 +50,11 @@ export function Dock() {
           <button
             key={key}
             aria-label={label}
-            onClick={() => navigate({ name: key } as View)}
+            onClick={() =>
+              key === "settings"
+                ? requestSettings()
+                : navigate({ name: key } as View)
+            }
             className={`pressable flex h-14 w-14 items-center justify-center rounded-full transition-colors duration-200 ${
               active === key
                 ? "bg-ink text-ink-contrast shadow-glass"

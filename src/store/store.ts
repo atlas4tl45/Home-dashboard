@@ -108,6 +108,8 @@ interface AppState {
   entityNames: Record<string, string>;
   /** Camera shown full screen, if any — pauses the idle timers. */
   fullscreenCamera: string | null;
+  /** The PIN prompt is open, waiting to let someone into Settings. */
+  pinPrompt: boolean;
   theme: Theme;
 
   connect: (creds: Credentials) => Promise<void>;
@@ -126,6 +128,10 @@ interface AppState {
   /** Pass null to fall back to the Home Assistant name. */
   setEntityName: (entityId: string, name: string | null) => void;
   setFullscreenCamera: (entityId: string | null) => void;
+  /** Open Settings, asking for the PIN first when one is set. */
+  requestSettings: () => void;
+  submitPin: (code: string) => boolean;
+  cancelPin: () => void;
   setTheme: (theme: Theme) => void;
 }
 
@@ -252,6 +258,7 @@ export const useStore = create<AppState>((set, get) => ({
   kiosk: { ...DEFAULT_KIOSK, ...(loadJson<KioskSettings>(KIOSK_KEY) ?? {}) },
   entityNames: loadJson<Record<string, string>>(NAMES_KEY) ?? {},
   fullscreenCamera: null,
+  pinPrompt: false,
   theme: loadTheme(),
 
   async connect(creds) {
@@ -320,6 +327,7 @@ export const useStore = create<AppState>((set, get) => ({
       kiosk: DEFAULT_KIOSK,
       entityNames: {},
       fullscreenCamera: null,
+      pinPrompt: false,
     });
   },
 
@@ -436,6 +444,21 @@ export const useStore = create<AppState>((set, get) => ({
 
   setFullscreenCamera(entityId) {
     set({ fullscreenCamera: entityId });
+  },
+
+  requestSettings() {
+    if (get().kiosk.pin) set({ pinPrompt: true });
+    else set({ view: { name: "settings" } });
+  },
+
+  submitPin(code) {
+    if (code !== get().kiosk.pin) return false;
+    set({ pinPrompt: false, view: { name: "settings" } });
+    return true;
+  },
+
+  cancelPin() {
+    set({ pinPrompt: false });
   },
 
   setTheme(theme) {

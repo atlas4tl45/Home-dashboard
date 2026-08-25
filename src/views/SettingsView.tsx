@@ -21,6 +21,9 @@ import {
   Shield,
   Sparkles,
   Home,
+  KeyRound,
+  Lock,
+  LockOpen,
   Sun,
   SunMoon,
   Trash2,
@@ -37,13 +40,14 @@ import {
   resolveFeature,
 } from "@/lib/entities";
 import { normalizeUrl } from "@/lib/ha";
-import type { Theme } from "@/lib/types";
+import { SECRET_TAPS, type Theme } from "@/lib/types";
 import {
   fetchDeployedVersion,
   reloadWithVersion,
 } from "@/hooks/useVersionWatcher";
 import { RoomEditor } from "@/components/RoomEditor";
 import { RenameSheet } from "@/components/RenameSheet";
+import { SetPinSheet } from "@/components/SetPinSheet";
 import { EntityPickerSheet } from "@/components/EntityPickerSheet";
 import { ViewHeader, ViewShell } from "@/views/ViewShell";
 
@@ -106,6 +110,7 @@ export function SettingsView() {
   >(null);
   const [pickingScenes, setPickingScenes] = useState(false);
   const [renaming, setRenaming] = useState<string | null>(null);
+  const [settingPin, setSettingPin] = useState(false);
   const [checking, setChecking] = useState(false);
   const [updateNote, setUpdateNote] = useState<string | null>(null);
 
@@ -240,6 +245,57 @@ export function SettingsView() {
                 onChange={(screensaverMs) => setKiosk({ screensaverMs })}
               />
             </div>
+          </div>
+        </section>
+
+        <section className="glass p-6">
+          <h2 className="mb-1 text-[17px] font-semibold">Settings access</h2>
+          <p className="mb-4 text-[14px] leading-relaxed text-ink/55">
+            Hiding Settings removes it from the dock. To get back here, tap
+            the clock {SECRET_TAPS} times quickly — on the home screen or any
+            page header.
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setKiosk({ hideSettings: false })}
+              className={`pressable flex h-12 flex-1 items-center justify-center gap-2 rounded-full text-[14px] font-medium ${
+                kiosk.hideSettings
+                  ? "bg-ink/[0.06] text-ink/70"
+                  : "bg-ink text-ink-contrast"
+              }`}
+            >
+              <LockOpen size={16} /> In the dock
+            </button>
+            <button
+              onClick={() => setKiosk({ hideSettings: true })}
+              className={`pressable flex h-12 flex-1 items-center justify-center gap-2 rounded-full text-[14px] font-medium ${
+                kiosk.hideSettings
+                  ? "bg-ink text-ink-contrast"
+                  : "bg-ink/[0.06] text-ink/70"
+              }`}
+            >
+              <Lock size={16} /> Hidden
+            </button>
+          </div>
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <button
+              onClick={() => setSettingPin(true)}
+              className="glass-pill pressable flex h-12 items-center gap-2 px-5 text-[14px] font-medium"
+            >
+              <KeyRound size={16} />
+              {kiosk.pin ? "Change PIN" : "Require a PIN"}
+            </button>
+            {kiosk.pin && (
+              <button
+                onClick={() => setKiosk({ pin: null })}
+                className="pressable flex h-12 items-center gap-2 rounded-full border border-red-500/20 bg-red-500/10 px-5 text-[14px] font-medium text-red-600 dark:text-red-400"
+              >
+                Remove PIN
+              </button>
+            )}
+            <span className="text-[13px] text-ink/45">
+              {kiosk.pin ? "A PIN is required to open Settings." : "No PIN set."}
+            </span>
           </div>
         </section>
 
@@ -513,6 +569,7 @@ export function SettingsView() {
           onClose={() => setPickingFeature(null)}
         />
       )}
+      {settingPin && <SetPinSheet onClose={() => setSettingPin(false)} />}
       {renaming && (
         <RenameSheet entityId={renaming} onClose={() => setRenaming(null)} />
       )}

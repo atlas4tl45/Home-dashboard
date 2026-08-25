@@ -4,6 +4,7 @@ import { useStore } from "@/store/store";
 import { useVersionWatcher } from "@/hooks/useVersionWatcher";
 import { useIdleTimeout } from "@/hooks/useIdleTimeout";
 import { Screensaver } from "@/components/Screensaver";
+import { PinGate } from "@/components/PinGate";
 import { SetupScreen } from "@/components/SetupScreen";
 import { Dock } from "@/components/Dock";
 import { HomeView } from "@/views/HomeView";
@@ -34,6 +35,7 @@ export default function App() {
   const navigate = useStore((s) => s.navigate);
   const kiosk = useStore((s) => s.kiosk);
   const fullscreenCamera = useStore((s) => s.fullscreenCamera);
+  const pinPrompt = useStore((s) => s.pinPrompt);
   const attempted = useRef(false);
   const [asleep, setAsleep] = useState(false);
   // Keep a wall tablet current without anyone touching it.
@@ -94,6 +96,7 @@ export default function App() {
     <div className="relative h-full">
       <Ambient />
       <div className="relative h-full">{content}</div>
+      {pinPrompt && <PinGate />}
       {asleep && <Screensaver onWake={() => setAsleep(false)} />}
     </div>
   );

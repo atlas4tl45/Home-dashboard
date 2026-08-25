@@ -24,6 +24,7 @@ import {
 import { useStore } from "@/store/store";
 import { useEffectiveRegistry, useVisibleEntities } from "@/hooks/useVisibleEntities";
 import { useClock } from "@/hooks/useClock";
+import { useSecretTaps } from "@/hooks/useSecretTaps";
 import { callService } from "@/lib/ha";
 import {
   ALARM_LABELS,
@@ -67,6 +68,8 @@ export function HomeView() {
   const registry = useEffectiveRegistry();
   const hiddenAreas = useStore((s) => s.hiddenAreas);
   const navigate = useStore((s) => s.navigate);
+  const requestSettings = useStore((s) => s.requestSettings);
+  const onClockTap = useSecretTaps(requestSettings);
   const now = useClock();
 
   const rooms = registry
@@ -101,7 +104,11 @@ export function HomeView() {
           <div className="text-[17px] font-medium text-ink/55">
             {greeting(now.getHours())}
           </div>
-          <div className="mt-1 whitespace-nowrap text-[clamp(4.5rem,10vw,7rem)] font-extralight leading-none tracking-tight tabular-nums">
+          <div
+            onClick={onClockTap}
+            data-clock
+            className="mt-1 cursor-default whitespace-nowrap text-[clamp(4.5rem,10vw,7rem)] font-extralight leading-none tracking-tight tabular-nums"
+          >
             {clock}
             {meridiem && (
               <span className="ml-3 text-[0.32em] font-light text-ink/55">

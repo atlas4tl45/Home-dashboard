@@ -4,7 +4,6 @@
 import { useState } from "react";
 import type { HassEntity } from "home-assistant-js-websocket";
 import {
-  Delete,
   Loader2,
   Moon,
   Shield,
@@ -16,6 +15,7 @@ import {
 import { callService } from "@/lib/ha";
 import { ALARM_LABELS, capitalize, isUnavailable } from "@/lib/entities";
 import { usePendingAction } from "@/hooks/usePendingAction";
+import { Keypad, PinDots } from "@/components/Keypad";
 
 type AlarmAction = "alarm_disarm" | "alarm_arm_home" | "alarm_arm_away" | "alarm_arm_night";
 
@@ -174,29 +174,13 @@ export function AlarmPanel({ entity }: { entity: HassEntity }) {
             <span className="text-sm text-ink/55">
               Enter code to {ACTION_LABELS[pending].toLowerCase()}
             </span>
-            <span className="flex gap-2">
-              {code.split("").map((_, i) => (
-                <span key={i} className="h-2.5 w-2.5 rounded-full bg-ink/80" />
-              ))}
-              {code.length === 0 && (
-                <span className="h-2.5 w-2.5 rounded-full bg-ink/15" />
-              )}
-            </span>
+            <PinDots length={code.length} />
           </div>
-          <div className="mx-auto grid max-w-xs grid-cols-3 gap-2.5">
-            {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((d) => (
-              <KeypadButton key={d} onClick={() => setCode((c) => c + d)}>
-                {d}
-              </KeypadButton>
-            ))}
-            <KeypadButton dim onClick={() => setPending(null)}>
-              Cancel
-            </KeypadButton>
-            <KeypadButton onClick={() => setCode((c) => c + "0")}>0</KeypadButton>
-            <KeypadButton dim onClick={() => setCode((c) => c.slice(0, -1))}>
-              <Delete size={20} />
-            </KeypadButton>
-          </div>
+          <Keypad
+            value={code}
+            onChange={setCode}
+            onCancel={() => setPending(null)}
+          />
           <button
             disabled={code.length === 0}
             onClick={() => run(pending, code)}
@@ -210,23 +194,3 @@ export function AlarmPanel({ entity }: { entity: HassEntity }) {
   );
 }
 
-function KeypadButton({
-  children,
-  onClick,
-  dim,
-}: {
-  children: React.ReactNode;
-  onClick: () => void;
-  dim?: boolean;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={`glass-pill pressable flex h-16 items-center justify-center text-xl font-medium ${
-        dim ? "text-[13px] font-normal text-ink/55" : ""
-      }`}
-    >
-      {children}
-    </button>
-  );
-}

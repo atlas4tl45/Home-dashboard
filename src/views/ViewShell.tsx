@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 import { useClock } from "@/hooks/useClock";
+import { useSecretTaps } from "@/hooks/useSecretTaps";
+import { useStore } from "@/store/store";
 
 /** Scrollable page container that leaves room for the dock on either edge. */
 export function ViewShell({ children }: { children: ReactNode }) {
@@ -19,13 +21,19 @@ export function ViewHeader({
   leading?: ReactNode;
 }) {
   const now = useClock();
+  const requestSettings = useStore((s) => s.requestSettings);
+  const onClockTap = useSecretTaps(requestSettings);
   return (
     <div className="mb-6 flex items-center justify-between gap-4">
       <div className="flex min-w-0 items-center gap-3">
         {leading}
         <h1 className="truncate text-3xl font-semibold tracking-tight">{title}</h1>
       </div>
-      <span className="shrink-0 text-xl font-light tabular-nums text-ink/45">
+      <span
+        onClick={onClockTap}
+        data-clock
+        className="shrink-0 cursor-default text-xl font-light tabular-nums text-ink/45"
+      >
         {now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
       </span>
     </div>

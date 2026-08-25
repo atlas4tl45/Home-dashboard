@@ -44,12 +44,22 @@ export interface KioskSettings {
   returnHomeMs: number;
   /** Show the clock screensaver after this long without a touch. */
   screensaverMs: number;
+  /** Drop Settings from the dock; reach it by tapping the clock instead. */
+  hideSettings: boolean;
+  /** Optional PIN required to open Settings. Not a secret — a guest gate. */
+  pin: string | null;
 }
 
 export const DEFAULT_KIOSK: KioskSettings = {
   returnHomeMs: 120_000,
   screensaverMs: 600_000,
+  hideSettings: false,
+  pin: null,
 };
+
+/** Taps on the clock that reveal a hidden Settings, and the window for them. */
+export const SECRET_TAPS = 5;
+export const SECRET_TAP_WINDOW_MS = 3000;
 
 /**
  * The dashboard setup that syncs to the Home Assistant user profile, so a
