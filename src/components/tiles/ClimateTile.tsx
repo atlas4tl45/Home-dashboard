@@ -20,8 +20,8 @@ const MODE_LABELS: Record<string, string> = {
 const MODE_ON_CLASSES: Record<string, string> = {
   heat: "bg-orange-400 text-white",
   cool: "bg-sky-500 text-white",
-  heat_cool: "bg-slate-800 text-white",
-  auto: "bg-slate-800 text-white",
+  heat_cool: "bg-ink text-ink-contrast",
+  auto: "bg-ink text-ink-contrast",
 };
 
 export function ClimateTile({ entity }: { entity: HassEntity }) {
@@ -56,8 +56,8 @@ export function ClimateTile({ entity }: { entity: HassEntity }) {
         <span
           className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${
             off || unavailable
-              ? "bg-slate-900/[0.06] text-slate-600"
-              : (MODE_ON_CLASSES[entity.state] ?? "bg-slate-800 text-white")
+              ? "bg-ink/[0.06] text-ink/70"
+              : (MODE_ON_CLASSES[entity.state] ?? "bg-ink text-ink-contrast")
           }`}
         >
           <Thermometer size={22} />
@@ -66,7 +66,7 @@ export function ClimateTile({ entity }: { entity: HassEntity }) {
           <span className="block truncate text-[15px] font-medium leading-tight">
             {friendlyName(entity)}
           </span>
-          <span className="block text-[13px] text-slate-500">
+          <span className="block text-[13px] text-ink/55">
             {current != null ? `Now ${current}°` : capitalize(entity.state)}
             {!off && target != null ? ` · set to ${target}°` : ""}
           </span>
@@ -78,8 +78,8 @@ export function ClimateTile({ entity }: { entity: HassEntity }) {
                   onClick={() => setMode(mode)}
                   className={`pressable rounded-full px-3 py-1 text-[12px] font-medium ${
                     entity.state === mode
-                      ? "bg-slate-900 text-white"
-                      : "bg-slate-900/[0.06] text-slate-500"
+                      ? "bg-ink text-ink-contrast"
+                      : "bg-ink/[0.06] text-ink/55"
                   }`}
                 >
                   {MODE_LABELS[mode]}

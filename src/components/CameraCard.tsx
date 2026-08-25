@@ -30,7 +30,7 @@ export function CameraCard({
           draggable={false}
         />
       ) : (
-        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-slate-400">
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-ink/45">
           <VideoOff size={28} />
           <span className="text-sm">{error ? "No signal" : "Loading…"}</span>
         </div>

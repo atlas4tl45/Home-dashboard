@@ -15,6 +15,8 @@ export interface Area {
 
 export type ConnectionStatus = "idle" | "connecting" | "connected" | "error";
 
+export type Theme = "auto" | "light" | "dark";
+
 export type View =
   | { name: "home" }
   | { name: "room"; areaId: string }

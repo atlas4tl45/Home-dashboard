@@ -5,10 +5,33 @@ import type { HassEntities } from "home-assistant-js-websocket";
 import * as ha from "@/lib/ha";
 import type { Registry } from "@/lib/ha";
 import { applyDemoService, demoEntities, demoRegistry } from "@/lib/demo";
-import type { ConnectionStatus, Credentials, View } from "@/lib/types";
+import type { ConnectionStatus, Credentials, Theme, View } from "@/lib/types";
 
 const CREDS_KEY = "glasshome.credentials";
 const HIDDEN_KEY = "glasshome.hiddenAreas";
+// Stored as a raw string (not JSON) — index.html reads it before first paint.
+const THEME_KEY = "glasshome.theme";
+
+function loadTheme(): Theme {
+  try {
+    const raw = localStorage.getItem(THEME_KEY);
+    return raw === "light" || raw === "dark" ? raw : "auto";
+  } catch {
+    return "auto";
+  }
+}
+
+/** Toggle the `dark` class on <html> and keep the browser chrome in sync. */
+function applyTheme(theme: Theme): void {
+  const dark =
+    theme === "dark" ||
+    (theme === "auto" &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches);
+  document.documentElement.classList.toggle("dark", dark);
+  document
+    .querySelector('meta[name="theme-color"]')
+    ?.setAttribute("content", dark ? "#0b0e15" : "#f0f1f3");
+}
 
 function loadJson<T>(key: string): T | null {
   try {
@@ -49,12 +72,14 @@ interface AppState {
   registry: Registry | null;
   view: View;
   hiddenAreas: string[];
+  theme: Theme;
 
   connect: (creds: Credentials) => Promise<void>;
   reconnect: () => Promise<void>;
   signOut: () => void;
   navigate: (view: View) => void;
   toggleAreaHidden: (areaId: string) => void;
+  setTheme: (theme: Theme) => void;
 }
 
 let unsubscribeStates: (() => void) | null = null;
@@ -72,6 +97,7 @@ export const useStore = create<AppState>((set, get) => ({
   registry: isDemo ? demoRegistry : null,
   view: { name: "home" },
   hiddenAreas: loadJson<string[]>(HIDDEN_KEY) ?? [],
+  theme: loadTheme(),
 
   async connect(creds) {
     if (isDemo) return;
@@ -136,7 +162,23 @@ export const useStore = create<AppState>((set, get) => ({
     saveJson(HIDDEN_KEY, next);
     set({ hiddenAreas: next });
   },
+
+  setTheme(theme) {
+    try {
+      localStorage.setItem(THEME_KEY, theme);
+    } catch {
+      /* non-fatal */
+    }
+    set({ theme });
+    applyTheme(theme);
+  },
 }));
+
+applyTheme(useStore.getState().theme);
+// In auto mode, follow the tablet's appearance as it changes.
+window
+  .matchMedia("(prefers-color-scheme: dark)")
+  .addEventListener("change", () => applyTheme(useStore.getState().theme));
 
 if (isDemo) {
   ha.setDemoHandler((domain, service, data, entityId) => {

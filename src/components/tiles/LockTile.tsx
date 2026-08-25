@@ -59,7 +59,7 @@ export function LockTile({ entity }: { entity: HassEntity }) {
       <div className="relative flex h-full flex-col justify-between gap-3">
         <span
           className={`flex h-11 w-11 items-center justify-center rounded-full transition-colors duration-200 ${
-            locked ? "bg-slate-800 text-white" : "bg-orange-400 text-white"
+            locked ? "bg-ink text-ink-contrast" : "bg-orange-400 text-white"
           }`}
         >
           {locked ? <Lock size={22} /> : <LockOpen size={22} />}
@@ -68,7 +68,7 @@ export function LockTile({ entity }: { entity: HassEntity }) {
           <span className="block truncate text-[15px] font-medium leading-tight">
             {friendlyName(entity)}
           </span>
-          <span className="block text-[13px] text-slate-500">
+          <span className="block text-[13px] text-ink/55">
             {holding ? "Hold to unlock…" : busy ? "Working…" : stateLabel(entity)}
           </span>
         </span>

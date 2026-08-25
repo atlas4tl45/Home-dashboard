@@ -16,8 +16,8 @@ import { SettingsView } from "@/views/SettingsView";
 function Ambient() {
   return (
     <div aria-hidden className="pointer-events-none fixed inset-0 overflow-hidden">
-      <div className="absolute -left-1/4 -top-1/3 h-[80vmax] w-[80vmax] rounded-full bg-white/80 blur-[140px]" />
-      <div className="absolute -bottom-1/3 -right-1/4 h-[70vmax] w-[70vmax] rounded-full bg-slate-400/25 blur-[140px]" />
+      <div className="absolute -left-1/4 -top-1/3 h-[80vmax] w-[80vmax] rounded-full bg-white/80 blur-[140px] dark:bg-white/[0.05]" />
+      <div className="absolute -bottom-1/3 -right-1/4 h-[70vmax] w-[70vmax] rounded-full bg-slate-400/25 blur-[140px] dark:bg-black/50" />
     </div>
   );
 }
@@ -56,7 +56,7 @@ export default function App() {
     content = <ConnectionLost message={error} />;
   } else {
     content = (
-      <div className="flex h-full flex-col items-center justify-center gap-4 text-slate-500">
+      <div className="flex h-full flex-col items-center justify-center gap-4 text-ink/55">
         <Loader2 size={32} className="animate-spin" />
         <span className="text-[15px]">Connecting to your home…</span>
       </div>
@@ -77,23 +77,23 @@ function ConnectionLost({ message }: { message: string | null }) {
   return (
     <div className="flex h-full items-center justify-center p-6">
       <div className="glass animate-rise w-full max-w-md rounded-4xl p-8 text-center shadow-glass-lg">
-        <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-slate-900/[0.06] text-slate-500">
+        <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-ink/[0.06] text-ink/55">
           <WifiOff size={26} />
         </span>
         <h1 className="mt-4 text-xl font-semibold">Can't reach your home</h1>
-        <p className="mt-2 text-[14px] leading-relaxed text-slate-500">
+        <p className="mt-2 text-[14px] leading-relaxed text-ink/55">
           {message ?? "The connection to Home Assistant was lost."}
         </p>
         <div className="mt-6 flex justify-center gap-3">
           <button
             onClick={() => void reconnect().catch(() => {})}
-            className="pressable flex h-14 items-center gap-2 rounded-full bg-slate-900 px-6 text-[15px] font-semibold text-white"
+            className="pressable flex h-14 items-center gap-2 rounded-full bg-ink px-6 text-[15px] font-semibold text-ink-contrast"
           >
             <RotateCw size={17} /> Try again
           </button>
           <button
             onClick={signOut}
-            className="glass-pill pressable flex h-14 items-center gap-2 px-6 text-[15px] font-medium text-slate-600"
+            className="glass-pill pressable flex h-14 items-center gap-2 px-6 text-[15px] font-medium text-ink/70"
           >
             <LogOut size={17} /> Sign out
           </button>

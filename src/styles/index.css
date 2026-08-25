@@ -2,8 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Theme tokens. Light is the default; the `dark` class on <html> flips them. */
 :root {
   color-scheme: light;
+  --ink: 15 23 42; /* slate-900 */
+  --ink-contrast: 255 255 255;
+  --bg: #f0f1f3;
+  --field: rgb(255 255 255 / 0.7);
+  --tile-on: rgb(255 255 255 / 0.85);
+  --tile-on-border: rgb(255 255 255 / 0.9);
+}
+
+.dark {
+  color-scheme: dark;
+  --ink: 237 241 250;
+  --ink-contrast: 13 17 27;
+  --bg: #0b0e15;
+  --field: rgb(255 255 255 / 0.08);
+  --tile-on: rgb(255 255 255 / 0.14);
+  --tile-on-border: rgb(255 255 255 / 0.22);
 }
 
 html,
@@ -13,7 +30,7 @@ body,
 }
 
 body {
-  @apply bg-[#f0f1f3] font-sans text-slate-800 antialiased;
+  @apply bg-[color:var(--bg)] font-sans text-ink/90 antialiased;
   overflow: hidden;
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
@@ -23,7 +40,7 @@ body {
 }
 
 @layer components {
-  /* The core material: frosted white panel with a bright hairline edge. */
+  /* The core material: frosted panel with a bright hairline edge. */
   .glass {
     @apply rounded-3xl border border-white/70 bg-white/60 shadow-glass backdrop-blur-2xl;
   }
@@ -32,6 +49,25 @@ body {
   }
   .glass-pill {
     @apply rounded-full border border-white/70 bg-white/60 shadow-glass backdrop-blur-2xl;
+  }
+  .dark .glass,
+  .dark .glass-pill {
+    @apply border-white/10 bg-white/[0.07];
+  }
+  .dark .glass-soft {
+    @apply border-white/[0.07] bg-white/[0.04];
+  }
+  .dark .glass,
+  .dark .glass-soft,
+  .dark .glass-pill {
+    box-shadow:
+      0 12px 40px -12px rgb(0 0 0 / 0.5),
+      inset 0 1px 0 rgb(255 255 255 / 0.1);
+  }
+  .dark .shadow-glass-lg {
+    box-shadow:
+      0 24px 70px -20px rgb(0 0 0 / 0.65),
+      inset 0 1px 0 rgb(255 255 255 / 0.12);
   }
   /* Interactive press feedback shared by every touch target. */
   .pressable {
@@ -45,11 +81,11 @@ body {
   appearance: none;
   height: 3.5rem;
   border-radius: 1.25rem;
-  border: 1px solid rgb(255 255 255 / 0.7);
+  border: 1px solid rgb(var(--ink) / 0.1);
   background: linear-gradient(
     to right,
     rgb(251 191 36 / 0.85) var(--fill, 50%),
-    rgb(15 23 42 / 0.06) var(--fill, 50%)
+    rgb(var(--ink) / 0.07) var(--fill, 50%)
   );
   outline: none;
   cursor: pointer;

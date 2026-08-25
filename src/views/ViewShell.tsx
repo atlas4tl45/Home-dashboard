@@ -25,7 +25,7 @@ export function ViewHeader({
         {leading}
         <h1 className="truncate text-3xl font-semibold tracking-tight">{title}</h1>
       </div>
-      <span className="shrink-0 text-xl font-light tabular-nums text-slate-400">
+      <span className="shrink-0 text-xl font-light tabular-nums text-ink/45">
         {now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
       </span>
     </div>

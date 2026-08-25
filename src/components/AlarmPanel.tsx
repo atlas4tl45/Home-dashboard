@@ -63,7 +63,7 @@ export function AlarmPanel({ entity }: { entity: HassEntity }) {
       ? "bg-emerald-600 text-white"
       : state === "arming"
         ? "bg-amber-400 text-amber-950"
-        : "bg-slate-900/[0.06] text-slate-600";
+        : "bg-ink/[0.06] text-ink/70";
 
   // supported_features bits: 1 = arm home, 2 = arm away, 4 = arm night.
   const features = (entity.attributes.supported_features as number) ?? 3;
@@ -97,7 +97,7 @@ export function AlarmPanel({ entity }: { entity: HassEntity }) {
           <div className="text-xl font-semibold">
             {ALARM_LABELS[state] ?? state.replace(/_/g, " ")}
           </div>
-          <div className="text-sm text-slate-500">Security system</div>
+          <div className="text-sm text-ink/55">Security system</div>
         </div>
       </div>
 
@@ -109,7 +109,7 @@ export function AlarmPanel({ entity }: { entity: HassEntity }) {
               onClick={() => request(action)}
               className={`pressable flex h-14 items-center justify-center gap-2 rounded-2xl text-[15px] font-semibold ${
                 action === "alarm_disarm"
-                  ? "col-span-full bg-slate-900 text-white"
+                  ? "col-span-full bg-ink text-ink-contrast"
                   : "glass-pill"
               }`}
             >
@@ -121,15 +121,15 @@ export function AlarmPanel({ entity }: { entity: HassEntity }) {
       ) : (
         <div className="mt-5">
           <div className="mb-3 flex items-center justify-center gap-3">
-            <span className="text-sm text-slate-500">
+            <span className="text-sm text-ink/55">
               Enter code to {ACTION_LABELS[pending].toLowerCase()}
             </span>
             <span className="flex gap-2">
               {code.split("").map((_, i) => (
-                <span key={i} className="h-2.5 w-2.5 rounded-full bg-slate-900/80" />
+                <span key={i} className="h-2.5 w-2.5 rounded-full bg-ink/80" />
               ))}
               {code.length === 0 && (
-                <span className="h-2.5 w-2.5 rounded-full bg-slate-900/15" />
+                <span className="h-2.5 w-2.5 rounded-full bg-ink/15" />
               )}
             </span>
           </div>
@@ -173,7 +173,7 @@ function KeypadButton({
     <button
       onClick={onClick}
       className={`glass-pill pressable flex h-16 items-center justify-center text-xl font-medium ${
-        dim ? "text-[13px] font-normal text-slate-500" : ""
+        dim ? "text-[13px] font-normal text-ink/55" : ""
       }`}
     >
       {children}

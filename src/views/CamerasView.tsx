@@ -17,7 +17,7 @@ export function CamerasView() {
     <ViewShell>
       <ViewHeader title="Cameras" />
       {cameras.length === 0 ? (
-        <div className="glass-soft p-8 text-center text-slate-500">
+        <div className="glass-soft p-8 text-center text-ink/55">
           No cameras found in Home Assistant.
         </div>
       ) : (

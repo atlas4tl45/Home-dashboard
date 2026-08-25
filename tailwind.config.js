@@ -1,8 +1,15 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
+  darkMode: "class",
   theme: {
     extend: {
+      colors: {
+        // Semantic ink: near-black in light mode, near-white in dark mode.
+        // Alpha steps of ink replace the fixed slate ramp (see index.css).
+        ink: "rgb(var(--ink) / <alpha-value>)",
+        "ink-contrast": "rgb(var(--ink-contrast) / <alpha-value>)",
+      },
       fontFamily: {
         sans: [
           "-apple-system",

@@ -88,18 +88,18 @@ export function HomeView() {
       <div className="gap-10 lg:grid lg:min-h-[calc(100dvh-7rem)] lg:grid-cols-[minmax(280px,2fr)_3fr] lg:items-center">
         {/* Left: time + conditions */}
         <div className="mb-8 lg:mb-0">
-          <div className="text-[17px] font-medium text-slate-500">
+          <div className="text-[17px] font-medium text-ink/55">
             {greeting(now.getHours())}
           </div>
           <div className="mt-1 whitespace-nowrap text-[clamp(4.5rem,10vw,7rem)] font-extralight leading-none tracking-tight tabular-nums">
             {clock}
             {meridiem && (
-              <span className="ml-3 text-[0.32em] font-light text-slate-500">
+              <span className="ml-3 text-[0.32em] font-light text-ink/55">
                 {meridiem}
               </span>
             )}
           </div>
-          <div className="mt-2 text-[17px] text-slate-500">
+          <div className="mt-2 text-[17px] text-ink/55">
             {now.toLocaleDateString([], {
               weekday: "long",
               month: "long",
@@ -133,7 +133,7 @@ export function HomeView() {
                 onClick={() => navigate({ name: "security" })}
                 className="glass-pill pressable flex items-center gap-2.5 px-5 py-3"
               >
-                <DoorOpen size={19} className="text-amber-600" />
+                <DoorOpen size={19} className="text-amber-600 dark:text-amber-400" />
                 <span className="text-[15px] font-medium">
                   {doorsOpen} {doorsOpen === 1 ? "door" : "doors"} open
                 </span>
@@ -164,12 +164,12 @@ export function HomeView() {
                     {room.area.name}
                   </span>
                   {room.temperature && (
-                    <span className="text-[15px] font-light text-slate-500">
+                    <span className="text-[15px] font-light text-ink/55">
                       {room.temperature}
                     </span>
                   )}
                 </div>
-                <div className="flex items-center gap-2 text-[13px] text-slate-500">
+                <div className="flex items-center gap-2 text-[13px] text-ink/55">
                   {room.lightsOn > 0 ? (
                     <>
                       <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-300 text-amber-950">
@@ -189,7 +189,7 @@ export function HomeView() {
           </div>
 
           {registry && rooms.length === 0 && (
-            <div className="glass-soft p-8 text-center text-slate-500">
+            <div className="glass-soft p-8 text-center text-ink/55">
               No rooms yet. Assign your devices to areas in Home Assistant and
               they'll show up here automatically.
             </div>
@@ -204,8 +204,8 @@ function AlarmGlyph({ state }: { state: string }) {
   if (state === "triggered" || state === "pending")
     return <ShieldAlert size={19} className="animate-pulse-alert text-red-500" />;
   if (state.startsWith("armed"))
-    return <ShieldCheck size={19} className="text-emerald-600" />;
-  return <ShieldOff size={19} className="text-slate-500" />;
+    return <ShieldCheck size={19} className="text-emerald-600 dark:text-emerald-400" />;
+  return <ShieldOff size={19} className="text-ink/55" />;
 }
 
 function WeatherChip({ entity }: { entity: HassEntity }) {
@@ -214,7 +214,7 @@ function WeatherChip({ entity }: { entity: HassEntity }) {
   const unit = (entity.attributes.temperature_unit as string | undefined) ?? "°";
   return (
     <span className="glass-pill flex items-center gap-2.5 px-5 py-3">
-      <Icon size={19} className="text-slate-600" />
+      <Icon size={19} className="text-ink/70" />
       <span className="text-[15px] font-medium">
         {temp != null ? `${Math.round(temp)}${unit}` : capitalize(entity.state)}
       </span>
@@ -232,7 +232,7 @@ function SceneChip({ entity }: { entity: HassEntity }) {
         window.setTimeout(() => setFired(false), 1200);
       }}
       className={`pressable flex items-center gap-2 rounded-full px-4 py-2.5 text-[14px] font-medium transition-colors duration-200 ${
-        fired ? "bg-slate-900 text-white" : "glass-pill text-slate-700"
+        fired ? "bg-ink text-ink-contrast" : "glass-pill text-ink/80"
       }`}
     >
       <Sparkles size={15} />

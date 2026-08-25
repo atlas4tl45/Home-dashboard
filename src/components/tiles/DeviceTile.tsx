@@ -30,16 +30,16 @@ interface Accent {
 // an active tile simply turns bright white with ink icons. The one accent is
 // warm amber, reserved for lights that are actually on.
 const NEUTRAL: Accent = {
-  tileOn: "border-white/90 bg-white/85",
-  iconOn: "bg-slate-800 text-white",
-  fill: "bg-slate-900/[0.06]",
+  tileOn: "border-[color:var(--tile-on-border)] bg-[color:var(--tile-on)]",
+  iconOn: "bg-ink text-ink-contrast",
+  fill: "bg-ink/[0.06]",
 };
 
 const ACCENTS: Record<string, Accent> = {
   light: {
-    tileOn: "border-white/90 bg-white/85",
+    tileOn: "border-[color:var(--tile-on-border)] bg-[color:var(--tile-on)]",
     iconOn: "bg-amber-300 text-amber-950",
-    fill: "bg-amber-300/35",
+    fill: "bg-amber-300/35 dark:bg-amber-400/20",
   },
   fan: NEUTRAL,
   switch: NEUTRAL,
@@ -221,7 +221,7 @@ export function DeviceTile({ entity, onLongPress }: Props) {
       <div className="relative flex h-full flex-col justify-between gap-3">
         <span
           className={`flex h-11 w-11 items-center justify-center rounded-full transition-colors duration-200 ${
-            active ? accent.iconOn : "bg-slate-900/[0.06] text-slate-600"
+            active ? accent.iconOn : "bg-ink/[0.06] text-ink/70"
           }`}
         >
           <Icon size={22} strokeWidth={2} />
@@ -230,7 +230,7 @@ export function DeviceTile({ entity, onLongPress }: Props) {
           <span className="block truncate text-[15px] font-medium leading-tight">
             {friendlyName(entity)}
           </span>
-          <span className="block text-[13px] text-slate-500">
+          <span className="block text-[13px] text-ink/55">
             {gesture.current?.dragging || override != null
               ? `${shownLevel}%`
               : stateLabel(entity)}

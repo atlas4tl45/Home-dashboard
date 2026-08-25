@@ -43,8 +43,8 @@ export function Dock() {
             onClick={() => navigate({ name: key } as View)}
             className={`pressable flex h-14 w-14 items-center justify-center rounded-full transition-colors duration-200 ${
               active === key
-                ? "bg-slate-900 text-white shadow-glass"
-                : "text-slate-500"
+                ? "bg-ink text-ink-contrast shadow-glass"
+                : "text-ink/55"
             }`}
           >
             <Icon size={24} strokeWidth={2} />
