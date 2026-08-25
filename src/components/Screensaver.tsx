@@ -3,6 +3,7 @@
 // dark in either theme, drifts slowly to avoid burning a fixed image into
 // the display, and any touch wakes it.
 
+import { useRef, useState } from "react";
 import type { HassEntity } from "home-assistant-js-websocket";
 import { ShieldCheck } from "lucide-react";
 import { useClock } from "@/hooks/useClock";
@@ -15,8 +16,29 @@ import {
   weatherLabel,
 } from "@/lib/entities";
 
+// A tap ends as pointerdown → pointerup → click. Unmounting on the first of
+// those hands the rest to whatever is underneath — waking the screen over a
+// room tile would open that room. So stay mounted for the whole gesture,
+// fade out, and only then hand control back.
+const DISMISS_MS = 400;
+
 export function Screensaver({ onWake }: { onWake: () => void }) {
   const now = useClock();
+  const [dismissing, setDismissing] = useState(false);
+  const timer = useRef<number>();
+
+  function wake(event: React.SyntheticEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    if (dismissing) return;
+    setDismissing(true);
+    timer.current = window.setTimeout(onWake, DISMISS_MS);
+  }
+
+  const swallow = (event: React.SyntheticEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+  };
   const entities = useVisibleEntities();
   const features = useStore((s) => s.features);
   const weather = resolveFeature(entities, features.weather, "weather");
@@ -31,13 +53,13 @@ export function Screensaver({ onWake }: { onWake: () => void }) {
     <div
       role="button"
       aria-label="Wake dashboard"
-      onPointerDown={(e) => {
-        // Swallow the wake tap so it can't also hit a control underneath.
-        e.preventDefault();
-        e.stopPropagation();
-        onWake();
-      }}
-      className="animate-rise fixed inset-0 z-[60] flex items-center justify-center bg-[#05070d] text-white/80"
+      onPointerDown={wake}
+      onPointerUp={swallow}
+      onClick={swallow}
+      onTouchEnd={swallow}
+      className={`animate-rise fixed inset-0 z-[60] flex items-center justify-center bg-[#05070d] text-white/80 transition-opacity duration-300 ${
+        dismissing ? "opacity-0" : "opacity-100"
+      }`}
     >
       <div className="animate-screensaver-drift flex flex-col items-center gap-3">
         <div className="whitespace-nowrap text-[clamp(5rem,16vw,11rem)] font-extralight leading-none tracking-tight tabular-nums">
