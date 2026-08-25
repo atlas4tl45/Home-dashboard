@@ -20,6 +20,9 @@ type Status = "connecting" | "live" | "blocked" | "unavailable";
 
 const PLAYLIST_TRIES = 15;
 const PLAYLIST_INTERVAL_MS = 1000;
+// WebKit can decline autoplay silently — no rejected promise, no error
+// event, just a video that never starts. Don't wait on it forever.
+const PLAY_TIMEOUT_MS = 12_000;
 
 const sleep = (ms: number) =>
   new Promise((resolve) => window.setTimeout(resolve, ms));
@@ -79,6 +82,7 @@ export function CameraFullscreen({ entityId }: { entityId: string }) {
     let cancelled = false;
     const aborted = () => cancelled;
     let teardown: (() => void) | undefined;
+    let watchdog: number | undefined;
     setStatus("connecting");
     setReason(null);
 
@@ -103,7 +107,10 @@ export function CameraFullscreen({ entityId }: { entityId: string }) {
 
       const element = video.current;
       if (!element) return;
-      const onPlaying = () => !cancelled && setStatus("live");
+      const onPlaying = () => {
+        window.clearTimeout(watchdog);
+        if (!cancelled) setStatus("live");
+      };
       element.addEventListener("playing", onPlaying);
 
       // React sets `muted` as a property, and WebKit only grants muted
@@ -159,10 +166,20 @@ export function CameraFullscreen({ entityId }: { entityId: string }) {
       void element.play().catch(() => {
         if (!cancelled) setStatus("blocked");
       });
+      // …and if it just quietly never starts, offer the tap anyway rather
+      // than sitting on "starting live view…" indefinitely.
+      watchdog = window.setTimeout(() => {
+        if (!cancelled) {
+          setStatus((current) =>
+            current === "connecting" ? "blocked" : current,
+          );
+        }
+      }, PLAY_TIMEOUT_MS);
     })();
 
     return () => {
       cancelled = true;
+      window.clearTimeout(watchdog);
       teardown?.();
     };
   }, [entityId, entity, creds, streamable, giveUp, attempt]);
