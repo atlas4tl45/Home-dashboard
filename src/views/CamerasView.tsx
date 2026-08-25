@@ -50,22 +50,29 @@ function FullscreenCamera({
   onClose: () => void;
 }) {
   const entity = useStore((s) => s.entities[entityId]);
-  const { src, error } = useCameraImage(entityId, 1000);
+  const { src, error, unavailable, handleImageError } = useCameraImage(
+    entityId,
+    1000,
+  );
+  const failed = error || unavailable;
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md"
       onClick={onClose}
     >
-      {src && !error ? (
+      {src && !failed ? (
         <img
           src={src}
           alt={friendlyName(entity)}
+          onError={handleImageError}
           className="max-h-full max-w-full object-contain"
           draggable={false}
         />
       ) : (
-        <span className="text-white/70">{error ? "No signal" : "Loading…"}</span>
+        <span className="text-white/70">
+          {unavailable ? "Camera offline" : error ? "No signal" : "Loading…"}
+        </span>
       )}
       <span className="glass-pill absolute bottom-8 left-1/2 -translate-x-1/2 px-5 py-2.5 text-[15px] font-medium">
         {friendlyName(entity)}
