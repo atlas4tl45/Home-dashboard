@@ -92,6 +92,7 @@ interface EntityRegistryEntry {
   device_id: string | null;
   hidden_by: string | null;
   disabled_by: string | null;
+  platform: string;
 }
 
 export interface Registry {
@@ -100,6 +101,8 @@ export interface Registry {
   entityArea: Record<string, string>;
   /** Entities the user hid or disabled inside Home Assistant. */
   hiddenEntities: Set<string>;
+  /** entity_id -> integration that provides it (e.g. "alarmo"). */
+  entityPlatform: Record<string, string>;
 }
 
 /**
@@ -119,9 +122,11 @@ export async function fetchRegistry(conn: Connection): Promise<Registry> {
 
   const deviceArea = new Map(devices.map((d) => [d.id, d.area_id]));
   const entityArea: Record<string, string> = {};
+  const entityPlatform: Record<string, string> = {};
   const hiddenEntities = new Set<string>();
 
   for (const entry of entities) {
+    if (entry.platform) entityPlatform[entry.entity_id] = entry.platform;
     if (entry.hidden_by || entry.disabled_by) {
       hiddenEntities.add(entry.entity_id);
       continue;
@@ -135,6 +140,7 @@ export async function fetchRegistry(conn: Connection): Promise<Registry> {
     areas: areas.map((a) => ({ area_id: a.area_id, name: a.name })),
     entityArea,
     hiddenEntities,
+    entityPlatform,
   };
 }
 
@@ -160,12 +166,12 @@ export async function callService(
   entityId?: string | string[],
 ): Promise<void> {
   if (demoHandler) {
-    demoHandler(
-      domain,
-      service,
-      data,
-      Array.isArray(entityId) ? entityId[0] : entityId,
-    );
+    // Some integrations (Alarmo) take entity_id as a service field rather
+    // than a target; look in both.
+    const target =
+      (Array.isArray(entityId) ? entityId[0] : entityId) ??
+      (data?.entity_id as string | undefined);
+    demoHandler(domain, service, data, target);
     return;
   }
   if (!connection) throw new HaError("Not connected to Home Assistant.");

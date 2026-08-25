@@ -485,14 +485,19 @@ if (isDemo) {
     // the command's own inputs (e.g. a cover's open/closed) would read wrong.
     const after = applyDemoService(before, domain, service, data, entityId);
     const transition = entityId
-      ? demoTransition(before, domain, service, entityId)
+      ? demoTransition(before, domain, service, entityId, data)
       : null;
     if (!transition || !entityId) {
       useStore.setState({ entities: after });
       return;
     }
     useStore.setState((s) => ({
-      entities: patchDemoState(s.entities, entityId, transition.state),
+      entities: patchDemoState(
+        s.entities,
+        entityId,
+        transition.state,
+        transition.attributes,
+      ),
     }));
     window.setTimeout(() => {
       useStore.setState((s) => ({

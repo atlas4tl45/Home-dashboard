@@ -157,6 +157,8 @@ export const demoRegistry: Registry = {
   ],
   entityArea: areaOf,
   hiddenEntities: new Set(),
+  // The demo alarm behaves like Alarmo so the bypass/delay flow is visible.
+  entityPlatform: { "alarm_control_panel.home": "alarmo" },
 };
 
 // The dashboard is opt-in, so the demo ships a pre-curated setup: rooms
@@ -175,15 +177,38 @@ export const demoFeatures = {
   scenes: ["scene.good_morning", "scene.movie_night", "scene.all_off"],
 };
 
-/** Set one entity's state, leaving attributes alone. */
+/** Set one entity's state, optionally merging attributes. */
 export function patchDemoState(
   entities: HassEntities,
   entityId: string,
   state: string,
+  attributes: Record<string, unknown> = {},
 ): HassEntities {
   const entity = entities[entityId];
   if (!entity) return entities;
-  return { ...entities, [entityId]: { ...entity, state } };
+  return {
+    ...entities,
+    [entityId]: {
+      ...entity,
+      state,
+      last_changed: new Date().toISOString(),
+      attributes: { ...entity.attributes, ...attributes },
+    },
+  };
+}
+
+/** Doors/windows standing open — what an alarm would refuse to arm around. */
+function demoOpenSensors(entities: HassEntities): string[] {
+  return Object.values(entities)
+    .filter(
+      (e) =>
+        e.entity_id.startsWith("binary_sensor.") &&
+        ["door", "window", "garage_door", "opening"].includes(
+          (e.attributes.device_class as string) ?? "",
+        ) &&
+        e.state === "on",
+    )
+    .map((e) => e.entity_id);
 }
 
 /**
@@ -197,7 +222,27 @@ export function demoTransition(
   domain: string,
   service: string,
   entityId: string,
-): { state: string; delayMs: number } | null {
+  data?: Record<string, unknown>,
+): { state: string; delayMs: number; attributes?: Record<string, unknown> } | null {
+  // Alarmo: blocked arming never transitions, and arming runs an exit delay.
+  if (domain === "alarmo") {
+    if (service === "disarm") return { state: "disarming", delayMs: 1200 };
+    if (service !== "arm") return null;
+    const blocked = demoOpenSensors(entities).length > 0 && !data?.force;
+    if (blocked) return null;
+    const mode = (data?.mode as string) ?? "away";
+    return {
+      state: "arming",
+      delayMs: 10_000,
+      attributes: {
+        delay: 10,
+        next_state: `armed_${mode}`,
+        open_sensors: {},
+        // Alarmo records the bypass when the arm is accepted, not at the end.
+        bypassed_sensors: data?.force ? demoOpenSensors(entities) : [],
+      },
+    };
+  }
   switch (`${domain}.${service}`) {
     case "lock.lock":
       return { state: "locking", delayMs: 3000 };
@@ -239,6 +284,33 @@ export function applyDemoService(
       attributes: { ...entity.attributes, ...attrs },
     },
   });
+
+  // Alarmo's own services, including bypass and skip-delay.
+  if (domain === "alarmo") {
+    const open = demoOpenSensors(entities);
+    if (service === "disarm")
+      return patch("disarmed", { open_sensors: {}, bypassed_sensors: [], delay: 0 });
+    if (service === "skip_delay") {
+      const next = (entity.attributes.next_state as string) ?? "armed_away";
+      return patch(next, { delay: 0 });
+    }
+    if (service === "arm") {
+      const force = Boolean(data?.force);
+      if (open.length > 0 && !force) {
+        // Alarmo reports what's open and stays where it was.
+        return patch(entity.state, {
+          open_sensors: Object.fromEntries(open.map((id) => [id, "open"])),
+        });
+      }
+      const mode = (data?.mode as string) ?? "away";
+      return patch(`armed_${mode}`, {
+        open_sensors: {},
+        bypassed_sensors: force ? open : [],
+        arm_mode: `armed_${mode}`,
+        delay: 0,
+      });
+    }
+  }
 
   const on = entity.state === "on";
   switch (`${domain}.${service}`) {

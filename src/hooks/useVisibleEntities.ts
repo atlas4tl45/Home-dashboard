@@ -59,6 +59,7 @@ export function useEffectiveRegistry(): Registry | null {
       areas: customRooms.map((r) => ({ area_id: r.id, name: r.name })),
       entityArea,
       hiddenEntities: registry.hiddenEntities,
+      entityPlatform: registry.entityPlatform,
     };
   }, [registry, customRooms]);
 }
