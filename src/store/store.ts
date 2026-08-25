@@ -9,6 +9,7 @@ import type {
   ConnectionStatus,
   Credentials,
   CustomRoom,
+  TabletConfig,
   Theme,
   View,
 } from "@/lib/types";
@@ -106,6 +107,71 @@ let unsubscribeStates: (() => void) | null = null;
 /** `?demo` shows a sample home without a Home Assistant instance. */
 const isDemo = new URLSearchParams(window.location.search).has("demo");
 
+// ---------------------------------------------------------------------------
+// Setup sync. The room/device setup is stored in the Home Assistant user
+// profile (frontend user data), with localStorage as an instant-boot cache —
+// so a kiosk that loses browser storage recovers its layout on connect.
+
+const HA_CONFIG_KEY = "glasshome_config";
+
+let pushTimer: number | undefined;
+let pushPending = false;
+
+/** Persist the current setup to the HA profile (debounced, last-writer-wins). */
+function schedulePushConfig(): void {
+  if (isDemo) return;
+  pushPending = true;
+  window.clearTimeout(pushTimer);
+  pushTimer = window.setTimeout(() => {
+    const { status, customRooms, hiddenAreas, hiddenEntities } =
+      useStore.getState();
+    if (status !== "connected") return; // cached locally; seeded on next connect
+    const config: TabletConfig = { customRooms, hiddenAreas, hiddenEntities };
+    ha.setUserData(HA_CONFIG_KEY, config)
+      .then(() => {
+        pushPending = false;
+      })
+      .catch(() => {
+        /* stays pending; retried on the next edit or reconnect */
+      });
+  }, 800);
+}
+
+function cacheConfigLocally(config: TabletConfig): void {
+  saveJson(ROOMS_KEY, config.customRooms);
+  saveJson(HIDDEN_KEY, config.hiddenAreas);
+  saveJson(HIDDEN_ENTITIES_KEY, config.hiddenEntities);
+}
+
+/** Adopt the server copy of the setup; if the server has none, seed it from here. */
+async function syncConfigFromServer(): Promise<void> {
+  if (isDemo) return;
+  if (pushPending) {
+    // Local edits haven't landed yet — push them rather than clobbering them.
+    schedulePushConfig();
+    return;
+  }
+  try {
+    const remote = await ha.getUserData<Partial<TabletConfig>>(HA_CONFIG_KEY);
+    if (remote) {
+      const config: TabletConfig = {
+        customRooms: remote.customRooms ?? [],
+        hiddenAreas: remote.hiddenAreas ?? [],
+        hiddenEntities: remote.hiddenEntities ?? [],
+      };
+      cacheConfigLocally(config);
+      useStore.setState(config);
+    } else {
+      const { customRooms, hiddenAreas, hiddenEntities } = useStore.getState();
+      if (customRooms.length || hiddenAreas.length || hiddenEntities.length) {
+        schedulePushConfig(); // first connect from this tablet seeds the profile
+      }
+    }
+  } catch {
+    /* older HA or transient error — keep the local cache */
+  }
+}
+
 export const useStore = create<AppState>((set, get) => ({
   creds: isDemo
     ? { url: "demo.home", token: "demo" }
@@ -130,14 +196,17 @@ export const useStore = create<AppState>((set, get) => ({
       unsubscribeStates = ha.subscribeStates(conn, (entities) =>
         set({ entities }),
       );
-      // Registries change rarely; refresh them whenever the socket recovers.
+      // Registries change rarely; refresh them (and re-sync the saved setup)
+      // whenever the socket recovers.
       conn.addEventListener("ready", () => {
         ha.fetchRegistry(conn)
           .then((r) => set({ registry: r }))
           .catch(() => {});
+        void syncConfigFromServer();
       });
       saveJson(CREDS_KEY, creds);
       set({ creds, registry, status: "connected" });
+      await syncConfigFromServer();
     } catch (err) {
       set({
         status: "error",
@@ -160,7 +229,12 @@ export const useStore = create<AppState>((set, get) => ({
     unsubscribeStates?.();
     unsubscribeStates = null;
     ha.disconnect();
+    window.clearTimeout(pushTimer);
+    pushPending = false;
     localStorage.removeItem(CREDS_KEY);
+    localStorage.removeItem(ROOMS_KEY);
+    localStorage.removeItem(HIDDEN_KEY);
+    localStorage.removeItem(HIDDEN_ENTITIES_KEY);
     set({
       creds: null,
       status: "idle",
@@ -168,6 +242,9 @@ export const useStore = create<AppState>((set, get) => ({
       entities: {},
       registry: null,
       view: { name: "home" },
+      customRooms: [],
+      hiddenAreas: [],
+      hiddenEntities: [],
     });
   },
 
@@ -182,6 +259,7 @@ export const useStore = create<AppState>((set, get) => ({
       : [...hidden, areaId];
     saveJson(HIDDEN_KEY, next);
     set({ hiddenAreas: next });
+    schedulePushConfig();
   },
 
   toggleEntityHidden(entityId) {
@@ -191,6 +269,7 @@ export const useStore = create<AppState>((set, get) => ({
       : [...hidden, entityId];
     saveJson(HIDDEN_ENTITIES_KEY, next);
     set({ hiddenEntities: next });
+    schedulePushConfig();
   },
 
   addRoom(name) {
@@ -198,6 +277,7 @@ export const useStore = create<AppState>((set, get) => ({
     const next = [...get().customRooms, { id, name, entityIds: [] }];
     saveJson(ROOMS_KEY, next);
     set({ customRooms: next });
+    schedulePushConfig();
     return id;
   },
 
@@ -207,6 +287,7 @@ export const useStore = create<AppState>((set, get) => ({
     );
     saveJson(ROOMS_KEY, next);
     set({ customRooms: next });
+    schedulePushConfig();
   },
 
   deleteRoom(roomId) {
@@ -215,6 +296,7 @@ export const useStore = create<AppState>((set, get) => ({
     const hiddenAreas = get().hiddenAreas.filter((id) => id !== roomId);
     saveJson(HIDDEN_KEY, hiddenAreas);
     set({ customRooms: next, hiddenAreas });
+    schedulePushConfig();
   },
 
   toggleRoomEntity(roomId, entityId) {
@@ -237,6 +319,7 @@ export const useStore = create<AppState>((set, get) => ({
     });
     saveJson(ROOMS_KEY, next);
     set({ customRooms: next });
+    schedulePushConfig();
   },
 
   setTheme(theme) {

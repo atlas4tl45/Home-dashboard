@@ -179,6 +179,30 @@ export async function callService(
 }
 
 /**
+ * Per-user key/value storage on the Home Assistant server (the same
+ * `frontend/*_user_data` API the HA frontend uses for its own UI state).
+ * The dashboard keeps its room/device setup here so it survives cleared
+ * browser storage and follows the HA user across tablets.
+ */
+export async function getUserData<T>(key: string): Promise<T | null> {
+  if (!connection) throw new HaError("Not connected to Home Assistant.");
+  const result = await connection.sendMessagePromise<{ value: T | null }>({
+    type: "frontend/get_user_data",
+    key,
+  });
+  return result?.value ?? null;
+}
+
+export async function setUserData(key: string, value: unknown): Promise<void> {
+  if (!connection) throw new HaError("Not connected to Home Assistant.");
+  await connection.sendMessagePromise({
+    type: "frontend/set_user_data",
+    key,
+    value,
+  });
+}
+
+/**
  * Sign a Home Assistant path (camera_proxy, entity_picture, …) so <img> can
  * load it without an Authorization header.
  */

@@ -7,9 +7,13 @@ the house can figure out at a glance.
 
 ## What it does
 
-- **Rooms, automatically.** The dashboard reads your Home Assistant areas and
-  builds a room grid on its own — no YAML, no card editors. Assign devices to
-  areas in HA and they appear.
+- **Rooms, your way.** The dashboard reads your Home Assistant areas and
+  builds a room grid on its own — and if you don't use areas, create rooms
+  and assign devices right on the tablet (Settings → Rooms). No YAML, no
+  card editors.
+- **Set up once.** Rooms and device visibility are saved to your Home
+  Assistant profile (frontend user data), so kiosk reloads, cleared browser
+  storage, and brand-new tablets recover the same setup on connect.
 - **Lights & fans.** Tap a tile to toggle; drag across it to dim or set speed
   (the tile fills like iOS Control Center). Long-press a color bulb for white
   tones and colors.

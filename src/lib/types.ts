@@ -24,6 +24,17 @@ export interface CustomRoom {
   entityIds: string[];
 }
 
+/**
+ * The dashboard setup that syncs to the Home Assistant user profile, so a
+ * kiosk that loses browser storage — or a brand-new tablet — picks it up
+ * automatically on connect.
+ */
+export interface TabletConfig {
+  customRooms: CustomRoom[];
+  hiddenAreas: string[];
+  hiddenEntities: string[];
+}
+
 export type View =
   | { name: "home" }
   | { name: "room"; areaId: string }

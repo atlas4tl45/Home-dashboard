@@ -158,7 +158,9 @@ export function SettingsView() {
           <h2 className="mb-1 text-[17px] font-semibold">Rooms</h2>
           <p className="mb-4 text-[14px] text-ink/55">
             Create rooms and assign devices to them right here. Home Assistant
-            areas show up automatically when you use them.
+            areas show up automatically when you use them. This setup is saved
+            to your Home Assistant profile, so kiosks and new tablets pick it
+            up on connect.
           </p>
           <div className="space-y-1">
             {roomRows.map((area) => {
