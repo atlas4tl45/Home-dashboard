@@ -5,6 +5,9 @@ import path from "node:path";
 // Pure static SPA — the browser talks to Home Assistant directly over its
 // WebSocket API, so there's no backend to proxy to.
 export default defineConfig({
+  // Relative asset paths so the built app runs from any subfolder — e.g.
+  // Home Assistant's own /local/dashboard/ (config/www) or a CDN subpath.
+  base: "./",
   plugins: [react()],
   resolve: {
     alias: {
