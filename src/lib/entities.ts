@@ -92,6 +92,37 @@ export function ofDomain(entities: HassEntities, domain: string): HassEntity[] {
     .sort((a, b) => friendlyName(a).localeCompare(friendlyName(b)));
 }
 
+const DISPLAY_DOMAINS = new Set<string>([
+  ...ROOM_DOMAINS,
+  "camera",
+  "scene",
+  "alarm_control_panel",
+  "weather",
+]);
+
+const OPENING_CLASSES = ["door", "window", "garage_door", "opening"];
+
+/** Can this entity appear somewhere on the dashboard? (Drives the Settings picker.) */
+export function isDisplayable(e: HassEntity): boolean {
+  const domain = domainOf(e.entity_id);
+  if (DISPLAY_DOMAINS.has(domain)) return true;
+  const cls = (e.attributes.device_class as string | undefined) ?? "";
+  if (domain === "binary_sensor") return OPENING_CLASSES.includes(cls) || cls === "motion";
+  if (domain === "sensor") return cls === "temperature";
+  return false;
+}
+
+/** Entities that make sense inside a room (everything a room view renders). */
+export function isRoomAssignable(e: HassEntity): boolean {
+  const domain = domainOf(e.entity_id);
+  return (
+    isDisplayable(e) &&
+    domain !== "scene" &&
+    domain !== "alarm_control_panel" &&
+    domain !== "weather"
+  );
+}
+
 /** Doors, windows and other openings for the security screen. */
 export function openingSensors(entities: HassEntities): HassEntity[] {
   const classes = new Set(["door", "window", "garage_door", "opening"]);

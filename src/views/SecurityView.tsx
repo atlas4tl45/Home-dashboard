@@ -1,7 +1,7 @@
 // Security: alarm panel, every lock, and door/window sensors at a glance.
 
 import { DoorClosed, DoorOpen } from "lucide-react";
-import { useStore } from "@/store/store";
+import { useVisibleEntities } from "@/hooks/useVisibleEntities";
 import {
   friendlyName,
   isOn,
@@ -14,7 +14,7 @@ import { LockTile } from "@/components/tiles/LockTile";
 import { ViewHeader, ViewShell } from "@/views/ViewShell";
 
 export function SecurityView() {
-  const entities = useStore((s) => s.entities);
+  const entities = useVisibleEntities();
   const alarms = ofDomain(entities, "alarm_control_panel");
   const locks = ofDomain(entities, "lock");
   const openings = openingSensors(entities);

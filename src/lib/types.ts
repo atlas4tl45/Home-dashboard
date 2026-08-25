@@ -17,6 +17,13 @@ export type ConnectionStatus = "idle" | "connecting" | "connected" | "error";
 
 export type Theme = "auto" | "light" | "dark";
 
+/** A room created on this tablet (no Home Assistant areas required). */
+export interface CustomRoom {
+  id: string;
+  name: string;
+  entityIds: string[];
+}
+
 export type View =
   | { name: "home" }
   | { name: "room"; areaId: string }

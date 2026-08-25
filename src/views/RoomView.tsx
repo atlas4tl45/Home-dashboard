@@ -5,6 +5,7 @@ import { useState } from "react";
 import type { HassEntity } from "home-assistant-js-websocket";
 import { ChevronLeft, DoorOpen, Radar } from "lucide-react";
 import { useStore } from "@/store/store";
+import { useEffectiveRegistry, useVisibleEntities } from "@/hooks/useVisibleEntities";
 import {
   buildRooms,
   domainOf,
@@ -22,8 +23,8 @@ import { LightSheet } from "@/components/LightSheet";
 import { ViewHeader, ViewShell } from "@/views/ViewShell";
 
 export function RoomView({ areaId }: { areaId: string }) {
-  const entities = useStore((s) => s.entities);
-  const registry = useStore((s) => s.registry);
+  const entities = useVisibleEntities();
+  const registry = useEffectiveRegistry();
   const [sheetLight, setSheetLight] = useState<string | null>(null);
 
   const room = registry

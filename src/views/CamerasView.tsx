@@ -3,13 +3,14 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import { useStore } from "@/store/store";
+import { useVisibleEntities } from "@/hooks/useVisibleEntities";
 import { friendlyName, ofDomain } from "@/lib/entities";
 import { CameraCard } from "@/components/CameraCard";
 import { useCameraImage } from "@/hooks/useCameraImage";
 import { ViewHeader, ViewShell } from "@/views/ViewShell";
 
 export function CamerasView() {
-  const entities = useStore((s) => s.entities);
+  const entities = useVisibleEntities();
   const [fullscreen, setFullscreen] = useState<string | null>(null);
   const cameras = ofDomain(entities, "camera");
 

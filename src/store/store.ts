@@ -5,10 +5,20 @@ import type { HassEntities } from "home-assistant-js-websocket";
 import * as ha from "@/lib/ha";
 import type { Registry } from "@/lib/ha";
 import { applyDemoService, demoEntities, demoRegistry } from "@/lib/demo";
-import type { ConnectionStatus, Credentials, Theme, View } from "@/lib/types";
+import type {
+  ConnectionStatus,
+  Credentials,
+  CustomRoom,
+  Theme,
+  View,
+} from "@/lib/types";
 
 const CREDS_KEY = "glasshome.credentials";
 const HIDDEN_KEY = "glasshome.hiddenAreas";
+const HIDDEN_ENTITIES_KEY = "glasshome.hiddenEntities";
+const ROOMS_KEY = "glasshome.customRooms";
+
+export const isCustomRoomId = (id: string): boolean => id.startsWith("room:");
 // Stored as a raw string (not JSON) — index.html reads it before first paint.
 const THEME_KEY = "glasshome.theme";
 
@@ -72,6 +82,10 @@ interface AppState {
   registry: Registry | null;
   view: View;
   hiddenAreas: string[];
+  /** Entities hidden on this tablet only (HA's own hidden flag also applies). */
+  hiddenEntities: string[];
+  /** Rooms created on this tablet; assignments override Home Assistant areas. */
+  customRooms: CustomRoom[];
   theme: Theme;
 
   connect: (creds: Credentials) => Promise<void>;
@@ -79,6 +93,11 @@ interface AppState {
   signOut: () => void;
   navigate: (view: View) => void;
   toggleAreaHidden: (areaId: string) => void;
+  toggleEntityHidden: (entityId: string) => void;
+  addRoom: (name: string) => string;
+  renameRoom: (roomId: string, name: string) => void;
+  deleteRoom: (roomId: string) => void;
+  toggleRoomEntity: (roomId: string, entityId: string) => void;
   setTheme: (theme: Theme) => void;
 }
 
@@ -97,6 +116,8 @@ export const useStore = create<AppState>((set, get) => ({
   registry: isDemo ? demoRegistry : null,
   view: { name: "home" },
   hiddenAreas: loadJson<string[]>(HIDDEN_KEY) ?? [],
+  hiddenEntities: loadJson<string[]>(HIDDEN_ENTITIES_KEY) ?? [],
+  customRooms: loadJson<CustomRoom[]>(ROOMS_KEY) ?? [],
   theme: loadTheme(),
 
   async connect(creds) {
@@ -161,6 +182,61 @@ export const useStore = create<AppState>((set, get) => ({
       : [...hidden, areaId];
     saveJson(HIDDEN_KEY, next);
     set({ hiddenAreas: next });
+  },
+
+  toggleEntityHidden(entityId) {
+    const hidden = get().hiddenEntities;
+    const next = hidden.includes(entityId)
+      ? hidden.filter((id) => id !== entityId)
+      : [...hidden, entityId];
+    saveJson(HIDDEN_ENTITIES_KEY, next);
+    set({ hiddenEntities: next });
+  },
+
+  addRoom(name) {
+    const id = `room:${Date.now().toString(36)}`;
+    const next = [...get().customRooms, { id, name, entityIds: [] }];
+    saveJson(ROOMS_KEY, next);
+    set({ customRooms: next });
+    return id;
+  },
+
+  renameRoom(roomId, name) {
+    const next = get().customRooms.map((r) =>
+      r.id === roomId ? { ...r, name } : r,
+    );
+    saveJson(ROOMS_KEY, next);
+    set({ customRooms: next });
+  },
+
+  deleteRoom(roomId) {
+    const next = get().customRooms.filter((r) => r.id !== roomId);
+    saveJson(ROOMS_KEY, next);
+    const hiddenAreas = get().hiddenAreas.filter((id) => id !== roomId);
+    saveJson(HIDDEN_KEY, hiddenAreas);
+    set({ customRooms: next, hiddenAreas });
+  },
+
+  toggleRoomEntity(roomId, entityId) {
+    const inRoom = get()
+      .customRooms.find((r) => r.id === roomId)
+      ?.entityIds.includes(entityId);
+    // An entity lives in at most one room, so assigning moves it.
+    const next = get().customRooms.map((r) => {
+      if (r.id === roomId) {
+        return {
+          ...r,
+          entityIds: inRoom
+            ? r.entityIds.filter((id) => id !== entityId)
+            : [...r.entityIds, entityId],
+        };
+      }
+      return r.entityIds.includes(entityId)
+        ? { ...r, entityIds: r.entityIds.filter((id) => id !== entityId) }
+        : r;
+    });
+    saveJson(ROOMS_KEY, next);
+    set({ customRooms: next });
   },
 
   setTheme(theme) {

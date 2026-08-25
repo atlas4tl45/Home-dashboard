@@ -22,6 +22,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useStore } from "@/store/store";
+import { useEffectiveRegistry, useVisibleEntities } from "@/hooks/useVisibleEntities";
 import { useClock } from "@/hooks/useClock";
 import { callService } from "@/lib/ha";
 import {
@@ -61,8 +62,8 @@ function greeting(hour: number): string {
 }
 
 export function HomeView() {
-  const entities = useStore((s) => s.entities);
-  const registry = useStore((s) => s.registry);
+  const entities = useVisibleEntities();
+  const registry = useEffectiveRegistry();
   const hiddenAreas = useStore((s) => s.hiddenAreas);
   const navigate = useStore((s) => s.navigate);
   const now = useClock();

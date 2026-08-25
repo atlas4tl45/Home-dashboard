@@ -3,6 +3,7 @@
 
 import { Home, Settings, Shield, Video, type LucideIcon } from "lucide-react";
 import { useStore } from "@/store/store";
+import { useVisibleEntities } from "@/hooks/useVisibleEntities";
 import { ofDomain } from "@/lib/entities";
 import type { View } from "@/lib/types";
 
@@ -15,7 +16,7 @@ interface Item {
 export function Dock() {
   const view = useStore((s) => s.view);
   const navigate = useStore((s) => s.navigate);
-  const entities = useStore((s) => s.entities);
+  const entities = useVisibleEntities();
 
   const hasCameras = ofDomain(entities, "camera").length > 0;
   const hasSecurity =
