@@ -10,6 +10,8 @@ import {
   demoEntities,
   demoFeatures,
   demoRegistry,
+  demoTransition,
+  patchDemoState,
 } from "@/lib/demo";
 import type {
   ConnectionStatus,
@@ -399,8 +401,24 @@ window
 
 if (isDemo) {
   ha.setDemoHandler((domain, service, data, entityId) => {
+    const before = useStore.getState().entities;
+    // Resolve the outcome up front: after the transitional state is applied
+    // the command's own inputs (e.g. a cover's open/closed) would read wrong.
+    const after = applyDemoService(before, domain, service, data, entityId);
+    const transition = entityId
+      ? demoTransition(before, domain, service, entityId)
+      : null;
+    if (!transition || !entityId) {
+      useStore.setState({ entities: after });
+      return;
+    }
     useStore.setState((s) => ({
-      entities: applyDemoService(s.entities, domain, service, data, entityId),
+      entities: patchDemoState(s.entities, entityId, transition.state),
     }));
+    window.setTimeout(() => {
+      useStore.setState((s) => ({
+        entities: { ...s.entities, [entityId]: after[entityId] },
+      }));
+    }, transition.delayMs);
   });
 }

@@ -195,7 +195,9 @@ export function stateLabel(e: HassEntity): string {
         ? "Locked"
         : e.state === "unlocked"
           ? "Unlocked"
-          : capitalize(e.state);
+          : e.state === "jammed"
+            ? "Jammed"
+            : capitalize(e.state);
     case "cover": {
       const pos = e.attributes.current_position as number | undefined;
       if (e.state === "open" && pos != null && pos < 100) return `Open · ${pos}%`;
@@ -224,6 +226,7 @@ export function capitalize(s: string): string {
 
 export const ALARM_LABELS: Record<string, string> = {
   disarmed: "Disarmed",
+  disarming: "Disarming…",
   armed_home: "Armed · Home",
   armed_away: "Armed · Away",
   armed_night: "Armed · Night",

@@ -7,8 +7,18 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { HassEntity } from "home-assistant-js-websocket";
-import { Blinds, Fan, Lightbulb, Plug, Power, type LucideIcon } from "lucide-react";
+import {
+  Blinds,
+  Fan,
+  Lightbulb,
+  Loader2,
+  Plug,
+  Power,
+  TriangleAlert,
+  type LucideIcon,
+} from "lucide-react";
 import { callService } from "@/lib/ha";
+import { usePendingAction } from "@/hooks/usePendingAction";
 import {
   brightnessPct,
   domainOf,
@@ -97,18 +107,34 @@ function applyLevel(entity: HassEntity, pct: number): void {
   }
 }
 
-function toggle(entity: HassEntity): void {
-  const domain = domainOf(entity.entity_id);
-  void callService(domain, "toggle", undefined, entity.entity_id);
+/** True when the device is "on" for its domain (covers count open as on). */
+function isActive(entity: HassEntity): boolean {
+  return domainOf(entity.entity_id) === "cover"
+    ? entity.state === "open"
+    : isOn(entity);
 }
 
 const LONG_PRESS_MS = 500;
 const DRAG_THRESHOLD_PX = 10;
 const SEND_THROTTLE_MS = 250;
+// Covers move for seconds, so acknowledge the press at once. Lights and
+// switches usually settle first — wait a beat so they never flash a spinner.
+const SPINNER_DELAY_MS: Record<string, number> = { cover: 0 };
 
 interface Props {
   entity: HassEntity;
   onLongPress?: () => void;
+}
+
+/** What the device is doing right now, phrased per domain. */
+function workingLabel(entity: HassEntity, active: boolean): string {
+  const domain = domainOf(entity.entity_id);
+  if (domain === "cover") {
+    if (entity.state === "opening") return "Opening…";
+    if (entity.state === "closing") return "Closing…";
+    return active ? "Closing…" : "Opening…";
+  }
+  return active ? "Turning off…" : "Turning on…";
 }
 
 export function DeviceTile({ entity, onLongPress }: Props) {
@@ -116,9 +142,30 @@ export function DeviceTile({ entity, onLongPress }: Props) {
   const accent = ACCENTS[domain] ?? NEUTRAL;
   const Icon = iconFor(entity);
   const unavailable = isUnavailable(entity);
-  const active = domain === "cover" ? entity.state === "open" : isOn(entity);
+  const active = isActive(entity);
   const level = levelOf(entity);
   const adjustable = level != null && !unavailable;
+
+  const {
+    working,
+    pending,
+    timedOut,
+    begin,
+    cancel: cancelPending,
+  } = usePendingAction(entity, {
+    showAfterMs: SPINNER_DELAY_MS[domain] ?? 700,
+  });
+  // Covers report their own transitional states.
+  const moving = entity.state === "opening" || entity.state === "closing";
+  const busy = working || moving;
+
+  function toggle() {
+    const wasActive = active;
+    begin((e) => isActive(e) !== wasActive);
+    callService(domain, "toggle", undefined, entity.entity_id).catch(
+      cancelPending,
+    );
+  }
 
   // While (and briefly after) dragging, show our value instead of HA's.
   const [override, setOverride] = useState<number | null>(null);
@@ -193,8 +240,8 @@ export function DeviceTile({ entity, onLongPress }: Props) {
       // Give HA a moment to report back before trusting its state again.
       window.clearTimeout(settleTimer.current);
       settleTimer.current = window.setTimeout(() => setOverride(null), 2500);
-    } else {
-      toggle(entity);
+    } else if (!pending) {
+      toggle();
     }
   }
 
@@ -206,9 +253,12 @@ export function DeviceTile({ entity, onLongPress }: Props) {
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerUp}
+      aria-busy={busy}
       className={`glass pressable relative min-h-[6rem] touch-none overflow-hidden p-4 transition-colors duration-200 ${
         active ? accent.tileOn : ""
-      } ${unavailable ? "opacity-40" : "cursor-pointer"}`}
+      } ${timedOut ? "border-red-500/30" : ""} ${
+        unavailable ? "opacity-40" : "cursor-pointer"
+      }`}
     >
       {showFill && (
         <div
@@ -221,19 +271,39 @@ export function DeviceTile({ entity, onLongPress }: Props) {
       <div className="relative flex h-full flex-col justify-between gap-3">
         <span
           className={`flex h-11 w-11 items-center justify-center rounded-full transition-colors duration-200 ${
-            active ? accent.iconOn : "bg-ink/[0.06] text-ink/70"
+            busy
+              ? "bg-ink/[0.06] text-ink/70"
+              : timedOut
+                ? "bg-red-500 text-white"
+                : active
+                  ? accent.iconOn
+                  : "bg-ink/[0.06] text-ink/70"
           }`}
         >
-          <Icon size={22} strokeWidth={2} />
+          {busy ? (
+            <Loader2 size={22} className="animate-spin" />
+          ) : timedOut ? (
+            <TriangleAlert size={22} />
+          ) : (
+            <Icon size={22} strokeWidth={2} />
+          )}
         </span>
         <span>
           <span className="block truncate text-[15px] font-medium leading-tight">
             {friendlyName(entity)}
           </span>
-          <span className="block text-[13px] text-ink/55">
+          <span
+            className={`block text-[13px] ${
+              timedOut && !busy ? "text-red-600 dark:text-red-400" : "text-ink/55"
+            }`}
+          >
             {gesture.current?.dragging || override != null
               ? `${shownLevel}%`
-              : stateLabel(entity)}
+              : busy
+                ? workingLabel(entity, active)
+                : timedOut
+                  ? "No response"
+                  : stateLabel(entity)}
           </span>
         </span>
       </div>

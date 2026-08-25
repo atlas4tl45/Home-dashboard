@@ -175,6 +175,50 @@ export const demoFeatures = {
   scenes: ["scene.good_morning", "scene.movie_night", "scene.all_off"],
 };
 
+/** Set one entity's state, leaving attributes alone. */
+export function patchDemoState(
+  entities: HassEntities,
+  entityId: string,
+  state: string,
+): HassEntities {
+  const entity = entities[entityId];
+  if (!entity) return entities;
+  return { ...entities, [entityId]: { ...entity, state } };
+}
+
+/**
+ * Real hardware doesn't answer instantly: deadbolts turn for seconds, garage
+ * doors travel, alarm panels arm. The demo mimics that — a transitional
+ * state now, the final state after a delay — so the working indicators
+ * behave the way they will in a real house.
+ */
+export function demoTransition(
+  entities: HassEntities,
+  domain: string,
+  service: string,
+  entityId: string,
+): { state: string; delayMs: number } | null {
+  switch (`${domain}.${service}`) {
+    case "lock.lock":
+      return { state: "locking", delayMs: 3000 };
+    case "lock.unlock":
+      return { state: "unlocking", delayMs: 3000 };
+    case "alarm_control_panel.alarm_arm_home":
+    case "alarm_control_panel.alarm_arm_away":
+    case "alarm_control_panel.alarm_arm_night":
+      return { state: "arming", delayMs: 3500 };
+    case "alarm_control_panel.alarm_disarm":
+      return { state: "disarming", delayMs: 1500 };
+    case "cover.toggle":
+      return {
+        state: entities[entityId]?.state === "open" ? "closing" : "opening",
+        delayMs: 2500,
+      };
+    default:
+      return null;
+  }
+}
+
 /** Apply a service call to the demo state, returning the updated entities. */
 export function applyDemoService(
   entities: HassEntities,

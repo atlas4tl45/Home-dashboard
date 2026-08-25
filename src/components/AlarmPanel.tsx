@@ -3,9 +3,19 @@
 
 import { useState } from "react";
 import type { HassEntity } from "home-assistant-js-websocket";
-import { Delete, Moon, Shield, ShieldAlert, ShieldCheck, ShieldOff } from "lucide-react";
+import {
+  Delete,
+  Loader2,
+  Moon,
+  Shield,
+  ShieldAlert,
+  ShieldCheck,
+  ShieldOff,
+  TriangleAlert,
+} from "lucide-react";
 import { callService } from "@/lib/ha";
-import { ALARM_LABELS, isUnavailable } from "@/lib/entities";
+import { ALARM_LABELS, capitalize, isUnavailable } from "@/lib/entities";
+import { usePendingAction } from "@/hooks/usePendingAction";
 
 type AlarmAction = "alarm_disarm" | "alarm_arm_home" | "alarm_arm_away" | "alarm_arm_night";
 
@@ -16,9 +26,26 @@ const ACTION_LABELS: Record<AlarmAction, string> = {
   alarm_arm_night: "Arm Night",
 };
 
+const TARGET_STATE: Record<AlarmAction, string> = {
+  alarm_disarm: "disarmed",
+  alarm_arm_home: "armed_home",
+  alarm_arm_away: "armed_away",
+  alarm_arm_night: "armed_night",
+};
+
 export function AlarmPanel({ entity }: { entity: HassEntity }) {
   const [pending, setPending] = useState<AlarmAction | null>(null);
   const [code, setCode] = useState("");
+  // Panels take several seconds to arm — and exit delays take longer — so
+  // show progress from the moment the button is pressed.
+  const {
+    working,
+    pending: inFlight,
+    timedOut,
+    begin,
+    cancel,
+  } = usePendingAction(entity, { timeoutMs: 120_000 });
+  const [sentAction, setSentAction] = useState<AlarmAction | null>(null);
 
   const state = entity.state;
   const armed = state.startsWith("armed");
@@ -30,12 +57,14 @@ export function AlarmPanel({ entity }: { entity: HassEntity }) {
     codeFormat != null && (action === "alarm_disarm" || codeArmRequired);
 
   function run(action: AlarmAction, withCode?: string) {
-    void callService(
+    setSentAction(action);
+    begin((e) => e.state === TARGET_STATE[action]);
+    callService(
       "alarm_control_panel",
       action,
       withCode ? { code: withCode } : undefined,
       entity.entity_id,
-    );
+    ).catch(cancel);
     setPending(null);
     setCode("");
   }
@@ -49,21 +78,41 @@ export function AlarmPanel({ entity }: { entity: HassEntity }) {
     }
   }
 
-  const StateIcon = triggered
-    ? ShieldAlert
-    : armed
-      ? ShieldCheck
-      : state === "arming"
-        ? Shield
-        : ShieldOff;
+  // HA's own transitional states, plus our optimistic one.
+  const transitioning = state === "arming" || state === "disarming";
+  const busy = working || transitioning;
 
-  const tone = triggered
-    ? "bg-red-500 text-white"
-    : armed
-      ? "bg-emerald-600 text-white"
-      : state === "arming"
-        ? "bg-amber-400 text-amber-950"
-        : "bg-ink/[0.06] text-ink/70";
+  const StateIcon = busy
+    ? Loader2
+    : timedOut
+      ? TriangleAlert
+      : triggered
+        ? ShieldAlert
+        : armed
+          ? ShieldCheck
+          : state === "arming"
+            ? Shield
+            : ShieldOff;
+
+  const tone = busy
+    ? "bg-ink/[0.06] text-ink/70"
+    : timedOut
+      ? "bg-red-500 text-white"
+      : triggered
+        ? "bg-red-500 text-white"
+        : armed
+          ? "bg-emerald-600 text-white"
+          : "bg-ink/[0.06] text-ink/70";
+
+  const headline = busy
+    ? sentAction === "alarm_disarm"
+      ? "Disarming…"
+      : sentAction
+        ? "Arming…"
+        : (ALARM_LABELS[state] ?? capitalize(state))
+    : timedOut
+      ? "No response"
+      : (ALARM_LABELS[state] ?? state.replace(/_/g, " "));
 
   // supported_features bits: 1 = arm home, 2 = arm away, 4 = arm night.
   const features = (entity.attributes.supported_features as number) ?? 3;
@@ -88,16 +137,16 @@ export function AlarmPanel({ entity }: { entity: HassEntity }) {
       <div className="flex items-center gap-4">
         <span
           className={`flex h-14 w-14 items-center justify-center rounded-full ${tone} ${
-            triggered ? "animate-pulse-alert" : ""
+            triggered && !busy ? "animate-pulse-alert" : ""
           }`}
         >
-          <StateIcon size={28} />
+          <StateIcon size={28} className={busy ? "animate-spin" : ""} />
         </span>
         <div>
-          <div className="text-xl font-semibold">
-            {ALARM_LABELS[state] ?? state.replace(/_/g, " ")}
+          <div className="text-xl font-semibold">{headline}</div>
+          <div className="text-sm text-ink/55">
+            {busy ? "Waiting for the panel" : "Security system"}
           </div>
-          <div className="text-sm text-ink/55">Security system</div>
         </div>
       </div>
 
@@ -106,8 +155,9 @@ export function AlarmPanel({ entity }: { entity: HassEntity }) {
           {actions.map((action) => (
             <button
               key={action}
+              disabled={inFlight}
               onClick={() => request(action)}
-              className={`pressable flex h-14 items-center justify-center gap-2 rounded-2xl text-[15px] font-semibold ${
+              className={`pressable flex h-14 items-center justify-center gap-2 rounded-2xl text-[15px] font-semibold disabled:opacity-40 ${
                 action === "alarm_disarm"
                   ? "col-span-full bg-ink text-ink-contrast"
                   : "glass-pill"
