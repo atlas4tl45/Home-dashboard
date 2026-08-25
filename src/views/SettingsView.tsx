@@ -15,6 +15,7 @@ import {
   Moon,
   Pencil,
   Plus,
+  RefreshCw,
   RotateCw,
   Shield,
   Sparkles,
@@ -32,6 +33,10 @@ import {
 } from "@/lib/entities";
 import { normalizeUrl } from "@/lib/ha";
 import type { Theme } from "@/lib/types";
+import {
+  fetchDeployedVersion,
+  reloadWithVersion,
+} from "@/hooks/useVersionWatcher";
 import { RoomEditor } from "@/components/RoomEditor";
 import { EntityPickerSheet } from "@/components/EntityPickerSheet";
 import { ViewHeader, ViewShell } from "@/views/ViewShell";
@@ -77,6 +82,20 @@ export function SettingsView() {
     (typeof FEATURES)[number] | null
   >(null);
   const [pickingScenes, setPickingScenes] = useState(false);
+  const [updateState, setUpdateState] = useState<
+    "idle" | "checking" | "current"
+  >("idle");
+
+  async function checkForUpdate() {
+    setUpdateState("checking");
+    const deployed = await fetchDeployedVersion();
+    if (deployed && deployed !== __BUILD_ID__) {
+      reloadWithVersion(deployed);
+      return;
+    }
+    setUpdateState("current");
+    window.setTimeout(() => setUpdateState("idle"), 4000);
+  }
 
   // Every room is created on the tablet; list them all, even empty ones.
   const roomInfo = useMemo(
@@ -360,6 +379,30 @@ export function SettingsView() {
           </div>
         </section>
         )}
+
+        <section className="glass p-6">
+          <h2 className="mb-1 text-[17px] font-semibold">Dashboard version</h2>
+          <p className="mb-4 text-[14px] text-ink/55">
+            Build <span className="tabular-nums text-ink/70">{__BUILD_ID__}</span>.
+            This tablet checks for new builds on its own and updates itself
+            when the screen is idle.
+          </p>
+          <button
+            onClick={() => void checkForUpdate()}
+            disabled={updateState === "checking"}
+            className="glass-pill pressable flex h-12 items-center gap-2 px-5 text-[14px] font-medium disabled:opacity-50"
+          >
+            <RefreshCw
+              size={16}
+              className={updateState === "checking" ? "animate-spin" : ""}
+            />
+            {updateState === "checking"
+              ? "Checking…"
+              : updateState === "current"
+                ? "Up to date"
+                : "Check for updates"}
+          </button>
+        </section>
 
         <section className="glass-soft p-6 text-[14px] leading-relaxed text-ink/55">
           <h2 className="mb-1 text-[15px] font-semibold text-ink/70">

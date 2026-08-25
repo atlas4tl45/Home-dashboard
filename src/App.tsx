@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { Loader2, LogOut, RotateCw, WifiOff } from "lucide-react";
 import { useStore } from "@/store/store";
+import { useVersionWatcher } from "@/hooks/useVersionWatcher";
 import { SetupScreen } from "@/components/SetupScreen";
 import { Dock } from "@/components/Dock";
 import { HomeView } from "@/views/HomeView";
@@ -29,6 +30,8 @@ export default function App() {
   const view = useStore((s) => s.view);
   const connect = useStore((s) => s.connect);
   const attempted = useRef(false);
+  // Keep a wall tablet current without anyone touching it.
+  useVersionWatcher();
 
   // Saved credentials (or kiosk launch params) connect automatically.
   useEffect(() => {
