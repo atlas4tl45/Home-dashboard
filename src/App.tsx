@@ -9,13 +9,15 @@ import { CamerasView } from "@/views/CamerasView";
 import { SecurityView } from "@/views/SecurityView";
 import { SettingsView } from "@/views/SettingsView";
 
-/** Soft ambient glow behind everything — the light the glass refracts. */
+/**
+ * Ambient light behind the glass: no hue at all — a soft daylight bloom from
+ * the upper left and quiet neutral shading below, like light on plaster.
+ */
 function Ambient() {
   return (
     <div aria-hidden className="pointer-events-none fixed inset-0 overflow-hidden">
-      <div className="animate-drift-slow absolute -left-1/4 -top-1/4 h-[70vmax] w-[70vmax] rounded-full bg-sky-200/50 blur-[120px]" />
-      <div className="animate-drift-slower absolute -bottom-1/4 -right-1/4 h-[60vmax] w-[60vmax] rounded-full bg-slate-300/40 blur-[120px]" />
-      <div className="absolute left-1/3 top-1/2 h-[40vmax] w-[40vmax] rounded-full bg-white/60 blur-[100px]" />
+      <div className="absolute -left-1/4 -top-1/3 h-[80vmax] w-[80vmax] rounded-full bg-white/80 blur-[140px]" />
+      <div className="absolute -bottom-1/3 -right-1/4 h-[70vmax] w-[70vmax] rounded-full bg-slate-400/25 blur-[140px]" />
     </div>
   );
 }

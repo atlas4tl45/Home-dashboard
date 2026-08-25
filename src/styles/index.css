@@ -13,7 +13,7 @@ body,
 }
 
 body {
-  @apply bg-[#eef1f7] font-sans text-slate-800 antialiased;
+  @apply bg-[#f0f1f3] font-sans text-slate-800 antialiased;
   overflow: hidden;
   overscroll-behavior: none;
   -webkit-tap-highlight-color: transparent;
