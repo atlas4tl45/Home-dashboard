@@ -106,10 +106,39 @@ export function CameraFullscreen({ entityId }: { entityId: string }) {
       const onPlaying = () => !cancelled && setStatus("live");
       element.addEventListener("playing", onPlaying);
 
-      const { default: Hls } = await import("hls.js");
-      if (cancelled) return;
+      // React sets `muted` as a property, and WebKit only grants muted
+      // autoplay when it sees the attribute before the source loads — the
+      // classic reason video won't start in an iPad kiosk.
+      element.muted = true;
+      element.setAttribute("muted", "");
+      element.setAttribute("playsinline", "");
 
-      if (Hls.isSupported() && sameOrigin) {
+      // Apple platforms play HLS natively, hardware-decoded and without
+      // MediaSource — the dependable path on an iPad, and it means the
+      // hls.js chunk is never downloaded there.
+      if (element.canPlayType("application/vnd.apple.mpegurl")) {
+        const onError = () =>
+          !cancelled &&
+          giveUp(
+            `the tablet couldn't play the stream${
+              element.error ? ` (${element.error.message || element.error.code})` : ""
+            }`,
+          );
+        element.addEventListener("error", onError);
+        element.src = url;
+        element.load();
+        teardown = () => {
+          element.removeEventListener("playing", onPlaying);
+          element.removeEventListener("error", onError);
+          element.removeAttribute("src");
+        };
+      } else {
+        const { default: Hls } = await import("hls.js");
+        if (cancelled) return;
+        if (!Hls.isSupported()) {
+          giveUp("this browser can't play the stream");
+          return;
+        }
         // hls.js recovers from the hiccups a freshly started stream throws.
         const hls = new Hls({ manifestLoadingMaxRetry: 6, levelLoadingMaxRetry: 6 });
         hls.loadSource(url);
@@ -124,19 +153,6 @@ export function CameraFullscreen({ entityId }: { entityId: string }) {
           element.removeEventListener("playing", onPlaying);
           hls.destroy();
         };
-      } else if (element.canPlayType("application/vnd.apple.mpegurl")) {
-        const onError = () =>
-          !cancelled && giveUp("the tablet couldn't play the stream");
-        element.addEventListener("error", onError);
-        element.src = url;
-        teardown = () => {
-          element.removeEventListener("playing", onPlaying);
-          element.removeEventListener("error", onError);
-          element.removeAttribute("src");
-        };
-      } else {
-        giveUp("this browser can't play the stream");
-        return;
       }
       // Muted inline playback is normally allowed, but a locked-down kiosk
       // WebView can still refuse; fall back to a tap.
