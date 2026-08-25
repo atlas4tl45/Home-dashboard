@@ -171,6 +171,13 @@ export function supportsColor(e: HassEntity): boolean {
   return modes.some((m) => ["hs", "rgb", "rgbw", "rgbww", "xy"].includes(m));
 }
 
+const CAMERA_STREAM = 2;
+
+/** Can this camera provide a live stream, or only still snapshots? */
+export function supportsStream(e: HassEntity): boolean {
+  return (((e.attributes.supported_features as number) ?? 0) & CAMERA_STREAM) !== 0;
+}
+
 const COVER_SET_POSITION = 4;
 
 export function supportsCoverPosition(e: HassEntity): boolean {

@@ -25,6 +25,7 @@ import { ViewHeader, ViewShell } from "@/views/ViewShell";
 export function RoomView({ areaId }: { areaId: string }) {
   const entities = useVisibleEntities();
   const registry = useEffectiveRegistry();
+  const setFullscreenCamera = useStore((s) => s.setFullscreenCamera);
   const [sheetLight, setSheetLight] = useState<string | null>(null);
 
   const room = registry
@@ -96,7 +97,11 @@ export function RoomView({ areaId }: { areaId: string }) {
       {room.cameras.length > 0 && (
         <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-2">
           {room.cameras.map((camera) => (
-            <CameraCard key={camera.entity_id} entity={camera} />
+            <CameraCard
+              key={camera.entity_id}
+              entity={camera}
+              onClick={() => setFullscreenCamera(camera.entity_id)}
+            />
           ))}
         </div>
       )}

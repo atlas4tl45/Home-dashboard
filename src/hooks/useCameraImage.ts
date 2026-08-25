@@ -50,8 +50,8 @@ export function useCameraImage(entityId: string, refreshMs = 4000) {
   }, [unavailable, entityPicture, base, entityId]);
 
   useEffect(() => {
+    if (!refreshMs) return; // paused (e.g. a live stream is playing instead)
     void refresh();
-    if (!refreshMs) return;
     const timer = window.setInterval(() => void refresh(), refreshMs);
     return () => window.clearInterval(timer);
   }, [refresh, refreshMs]);

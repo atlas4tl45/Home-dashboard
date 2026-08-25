@@ -5,6 +5,7 @@ import { useVersionWatcher } from "@/hooks/useVersionWatcher";
 import { useIdleTimeout } from "@/hooks/useIdleTimeout";
 import { Screensaver } from "@/components/Screensaver";
 import { PinGate } from "@/components/PinGate";
+import { CameraFullscreen } from "@/components/CameraFullscreen";
 import { SetupScreen } from "@/components/SetupScreen";
 import { Dock } from "@/components/Dock";
 import { HomeView } from "@/views/HomeView";
@@ -96,6 +97,7 @@ export default function App() {
     <div className="relative h-full">
       <Ambient />
       <div className="relative h-full">{content}</div>
+      {fullscreenCamera && <CameraFullscreen entityId={fullscreenCamera} />}
       {pinPrompt && <PinGate />}
       {asleep && <Screensaver onWake={() => setAsleep(false)} />}
     </div>

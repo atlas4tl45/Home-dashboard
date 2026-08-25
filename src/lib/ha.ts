@@ -203,6 +203,25 @@ export async function setUserData(key: string, value: unknown): Promise<void> {
 }
 
 /**
+ * Ask Home Assistant to start an HLS stream for a camera and return the
+ * playlist path. Requires the `stream` integration and a camera that
+ * supports streaming; returns null when it doesn't.
+ */
+export async function fetchCameraStream(entityId: string): Promise<string | null> {
+  if (!connection) throw new HaError("Not connected to Home Assistant.");
+  try {
+    const result = await connection.sendMessagePromise<{ url: string }>({
+      type: "camera/stream",
+      entity_id: entityId,
+      format: "hls",
+    });
+    return result?.url ?? null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Sign a Home Assistant path (camera_proxy, entity_picture, …) so <img> can
  * load it without an Authorization header.
  */
