@@ -104,8 +104,14 @@ interface AppState {
 
 let unsubscribeStates: (() => void) | null = null;
 
-/** `?demo` shows a sample home without a Home Assistant instance. */
-const isDemo = new URLSearchParams(window.location.search).has("demo");
+/**
+ * `?demo` shows a sample home without a Home Assistant instance. Embeds that
+ * can't carry a query string (e.g. a hosted preview) set `window.__DEMO__`
+ * before the bundle loads instead.
+ */
+const isDemo =
+  new URLSearchParams(window.location.search).has("demo") ||
+  (window as { __DEMO__?: boolean }).__DEMO__ === true;
 
 // ---------------------------------------------------------------------------
 // Setup sync. The room/device setup is stored in the Home Assistant user
