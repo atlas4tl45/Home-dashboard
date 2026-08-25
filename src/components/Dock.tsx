@@ -3,7 +3,7 @@
 
 import { Home, Settings, Shield, Video, type LucideIcon } from "lucide-react";
 import { useStore } from "@/store/store";
-import { useVisibleEntities } from "@/hooks/useVisibleEntities";
+import { useEffectiveRegistry, useVisibleEntities } from "@/hooks/useVisibleEntities";
 import { ofDomain, resolveFeature } from "@/lib/entities";
 import type { View } from "@/lib/types";
 
@@ -19,10 +19,14 @@ export function Dock() {
   const entities = useVisibleEntities();
 
   const features = useStore((s) => s.features);
-  const hasCameras = ofDomain(entities, "camera").length > 0;
+  const registry = useEffectiveRegistry();
+  const assigned = registry?.entityArea ?? {};
+  const hasCameras = ofDomain(entities, "camera").some(
+    (e) => assigned[e.entity_id],
+  );
   const hasSecurity =
     resolveFeature(entities, features.alarm, "alarm_control_panel") != null ||
-    ofDomain(entities, "lock").length > 0;
+    ofDomain(entities, "lock").some((e) => assigned[e.entity_id]);
 
   const items: Item[] = [
     { key: "home", label: "Home", icon: Home },

@@ -29,9 +29,9 @@ import {
   ALARM_LABELS,
   buildRooms,
   capitalize,
+  domainOf,
   friendlyName,
   isOn,
-  ofDomain,
   openingSensors,
   resolveFeature,
 } from "@/lib/entities";
@@ -76,10 +76,17 @@ export function HomeView() {
   const features = useStore((s) => s.features);
   const weather = resolveFeature(entities, features.weather, "weather");
   const alarm = resolveFeature(entities, features.alarm, "alarm_control_panel");
-  const scenes = ofDomain(entities, "scene");
-  // Glanceable status, pro-installer style: only surfaced when noteworthy.
-  const lightsOn = ofDomain(entities, "light").filter(isOn).length;
-  const doorsOpen = openingSensors(entities).filter(isOn).length;
+  const scenes = (features.scenes ?? [])
+    .map((id) => entities[id])
+    .filter(Boolean);
+  // Glanceable status, pro-installer style: only devices you've added count.
+  const assigned = registry?.entityArea ?? {};
+  const lightsOn = Object.keys(assigned).filter(
+    (id) => domainOf(id) === "light" && entities[id] && isOn(entities[id]),
+  ).length;
+  const doorsOpen = openingSensors(entities).filter(
+    (e) => assigned[e.entity_id] && isOn(e),
+  ).length;
 
   const time = now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
   const meridiem = /([AP]M)$/i.exec(time)?.[1];
@@ -192,8 +199,8 @@ export function HomeView() {
 
           {registry && rooms.length === 0 && (
             <div className="glass-soft p-8 text-center text-ink/55">
-              No rooms yet. Assign your devices to areas in Home Assistant and
-              they'll show up here automatically.
+              Nothing here yet. Open Settings, create your rooms, and add the
+              devices you want on this dashboard.
             </div>
           )}
         </div>

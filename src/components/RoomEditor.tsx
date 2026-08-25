@@ -18,6 +18,7 @@ export function RoomEditor({
   const room = useStore((s) => s.customRooms.find((r) => r.id === roomId));
   const entities = useStore((s) => s.entities);
   const registry = useEffectiveRegistry();
+  const haRegistry = useStore((s) => s.registry);
   const renameRoom = useStore((s) => s.renameRoom);
   const toggleRoomEntity = useStore((s) => s.toggleRoomEntity);
   const [query, setQuery] = useState("");
@@ -51,6 +52,10 @@ export function RoomEditor({
     () => new Map((registry?.areas ?? []).map((a) => [a.area_id, a.name])),
     [registry],
   );
+  const haAreaNames = useMemo(
+    () => new Map((haRegistry?.areas ?? []).map((a) => [a.area_id, a.name])),
+    [haRegistry],
+  );
 
   if (!room) return null;
 
@@ -77,9 +82,17 @@ export function RoomEditor({
       <div className="no-scrollbar max-h-[50vh] space-y-1 overflow-y-auto">
         {candidates.map((entity) => {
           const inRoom = room.entityIds.includes(entity.entity_id);
-          const currentArea = registry?.entityArea[entity.entity_id];
-          const elsewhere =
-            !inRoom && currentArea ? areaNames.get(currentArea) : undefined;
+          const customArea = registry?.entityArea[entity.entity_id];
+          const haArea = haRegistry?.entityArea[entity.entity_id];
+          // Where it lives now: another dashboard room, or (as a hint when
+          // unplaced) its Home Assistant area.
+          const elsewhere = !inRoom
+            ? customArea
+              ? `in ${areaNames.get(customArea)}`
+              : haArea
+                ? `HA area: ${haAreaNames.get(haArea)}`
+                : undefined
+            : undefined;
           return (
             <button
               key={entity.entity_id}
@@ -99,7 +112,7 @@ export function RoomEditor({
                 </span>
                 <span className="block truncate text-[12px] text-ink/45">
                   {entity.entity_id}
-                  {elsewhere ? ` · in ${elsewhere}` : ""}
+                  {elsewhere ? ` · ${elsewhere}` : ""}
                 </span>
               </span>
             </button>

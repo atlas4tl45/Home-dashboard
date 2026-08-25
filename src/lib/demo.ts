@@ -159,6 +159,22 @@ export const demoRegistry: Registry = {
   hiddenEntities: new Set(),
 };
 
+// The dashboard is opt-in, so the demo ships a pre-curated setup: rooms
+// built from the sample home plus the alarm/weather/scene selections.
+export const demoCustomRooms = demoRegistry.areas.map((area) => ({
+  id: `room:${area.area_id}`,
+  name: area.name,
+  entityIds: Object.entries(areaOf)
+    .filter(([, areaId]) => areaId === area.area_id)
+    .map(([entityId]) => entityId),
+}));
+
+export const demoFeatures = {
+  alarm: "alarm_control_panel.home",
+  weather: "weather.home",
+  scenes: ["scene.good_morning", "scene.movie_night", "scene.all_off"],
+};
+
 /** Apply a service call to the demo state, returning the updated entities. */
 export function applyDemoService(
   entities: HassEntities,

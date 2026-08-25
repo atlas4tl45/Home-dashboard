@@ -113,19 +113,21 @@ export function isDisplayable(e: HassEntity): boolean {
 }
 
 /**
- * Resolve a whole-home feature selection to an entity.
- * undefined selection = automatic (first healthy entity of the domain);
- * "none" = feature disabled; otherwise the chosen entity_id.
+ * Resolve a whole-home feature selection to an entity. Opt-in semantics:
+ * undefined or "none" = feature off; "auto" = first healthy entity of the
+ * domain; otherwise the chosen entity_id.
  */
 export function resolveFeature(
   entities: HassEntities,
   selection: string | undefined,
   domain: string,
 ): HassEntity | undefined {
-  if (selection === "none") return undefined;
-  if (selection) return entities[selection];
-  const all = ofDomain(entities, domain);
-  return all.find((e) => !isUnavailable(e)) ?? all[0];
+  if (!selection || selection === "none") return undefined;
+  if (selection === "auto") {
+    const all = ofDomain(entities, domain);
+    return all.find((e) => !isUnavailable(e)) ?? all[0];
+  }
+  return entities[selection];
 }
 
 /** Entities that make sense inside a room (everything a room view renders). */

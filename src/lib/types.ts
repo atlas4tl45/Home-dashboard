@@ -25,13 +25,15 @@ export interface CustomRoom {
 }
 
 /**
- * Which entity powers a whole-home feature (alarm chip, weather chip, …).
- * Missing key = automatic (first suitable entity); "none" = feature off;
- * anything else is a specific entity_id.
+ * Which entities power the whole-home features. Everything is opt-in:
+ * a missing key (or "none") means the feature is off, "auto" means the
+ * first suitable entity, anything else is a specific entity_id. Scenes
+ * are a plain opt-in list.
  */
 export interface FeatureSelections {
   alarm?: string;
   weather?: string;
+  scenes?: string[];
 }
 
 /**

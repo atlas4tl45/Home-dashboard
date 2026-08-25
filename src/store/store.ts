@@ -4,7 +4,13 @@ import { create } from "zustand";
 import type { HassEntities } from "home-assistant-js-websocket";
 import * as ha from "@/lib/ha";
 import type { Registry } from "@/lib/ha";
-import { applyDemoService, demoEntities, demoRegistry } from "@/lib/demo";
+import {
+  applyDemoService,
+  demoCustomRooms,
+  demoEntities,
+  demoFeatures,
+  demoRegistry,
+} from "@/lib/demo";
 import type {
   ConnectionStatus,
   Credentials,
@@ -103,10 +109,8 @@ interface AppState {
   renameRoom: (roomId: string, name: string) => void;
   deleteRoom: (roomId: string) => void;
   toggleRoomEntity: (roomId: string, entityId: string) => void;
-  setFeature: (
-    feature: keyof FeatureSelections,
-    selection: string | null,
-  ) => void;
+  setFeature: (feature: "alarm" | "weather", selection: string | null) => void;
+  toggleSceneShown: (entityId: string) => void;
   setTheme: (theme: Theme) => void;
 }
 
@@ -210,8 +214,12 @@ export const useStore = create<AppState>((set, get) => ({
   view: { name: "home" },
   hiddenAreas: loadJson<string[]>(HIDDEN_KEY) ?? [],
   hiddenEntities: loadJson<string[]>(HIDDEN_ENTITIES_KEY) ?? [],
-  customRooms: loadJson<CustomRoom[]>(ROOMS_KEY) ?? [],
-  features: loadJson<FeatureSelections>(FEATURES_KEY) ?? {},
+  customRooms: isDemo
+    ? demoCustomRooms
+    : (loadJson<CustomRoom[]>(ROOMS_KEY) ?? []),
+  features: isDemo
+    ? demoFeatures
+    : (loadJson<FeatureSelections>(FEATURES_KEY) ?? {}),
   theme: loadTheme(),
 
   async connect(creds) {
@@ -356,6 +364,17 @@ export const useStore = create<AppState>((set, get) => ({
     const features = { ...get().features };
     if (selection === null) delete features[feature];
     else features[feature] = selection;
+    saveJson(FEATURES_KEY, features);
+    set({ features });
+    schedulePushConfig();
+  },
+
+  toggleSceneShown(entityId) {
+    const current = get().features.scenes ?? [];
+    const scenes = current.includes(entityId)
+      ? current.filter((id) => id !== entityId)
+      : [...current, entityId];
+    const features = { ...get().features, scenes };
     saveJson(FEATURES_KEY, features);
     set({ features });
     schedulePushConfig();

@@ -2,7 +2,7 @@
 
 import { DoorClosed, DoorOpen } from "lucide-react";
 import { useStore } from "@/store/store";
-import { useVisibleEntities } from "@/hooks/useVisibleEntities";
+import { useEffectiveRegistry, useVisibleEntities } from "@/hooks/useVisibleEntities";
 import {
   friendlyName,
   isOn,
@@ -23,8 +23,10 @@ export function SecurityView() {
       : features.alarm
         ? [entities[features.alarm]].filter(Boolean)
         : ofDomain(entities, "alarm_control_panel");
-  const locks = ofDomain(entities, "lock");
-  const openings = openingSensors(entities);
+  const registry = useEffectiveRegistry();
+  const assigned = registry?.entityArea ?? {};
+  const locks = ofDomain(entities, "lock").filter((e) => assigned[e.entity_id]);
+  const openings = openingSensors(entities).filter((e) => assigned[e.entity_id]);
   const openCount = openings.filter((e) => isOn(e)).length;
 
   return (

@@ -1,6 +1,7 @@
-// Settings: connection, appearance, and this tablet's own room + device
-// setup. Rooms can be created and edited right here — Home Assistant areas
-// appear automatically when they exist, but aren't required.
+// Settings: connection, appearance, and the dashboard's curated setup.
+// Everything is opt-in — rooms are created here, devices are added to them
+// by search, and whole-home features (alarm, weather, scenes) are explicit
+// picks. Home Assistant areas only ever appear as hints in the search.
 
 import { useMemo, useState } from "react";
 import type { HassEntity } from "home-assistant-js-websocket";
@@ -16,11 +17,12 @@ import {
   Plus,
   RotateCw,
   Shield,
+  Sparkles,
   Sun,
   SunMoon,
   Trash2,
 } from "lucide-react";
-import { isCustomRoomId, useStore } from "@/store/store";
+import { useStore } from "@/store/store";
 import { useEffectiveRegistry } from "@/hooks/useVisibleEntities";
 import {
   buildRooms,
@@ -29,13 +31,13 @@ import {
   resolveFeature,
 } from "@/lib/entities";
 import { normalizeUrl } from "@/lib/ha";
-import type { FeatureSelections, Theme } from "@/lib/types";
+import type { Theme } from "@/lib/types";
 import { RoomEditor } from "@/components/RoomEditor";
 import { EntityPickerSheet } from "@/components/EntityPickerSheet";
 import { ViewHeader, ViewShell } from "@/views/ViewShell";
 
 const FEATURES: {
-  key: keyof FeatureSelections;
+  key: "alarm" | "weather";
   label: string;
   domain: string;
   icon: typeof Shield;
@@ -62,6 +64,7 @@ export function SettingsView() {
   const addRoom = useStore((s) => s.addRoom);
   const features = useStore((s) => s.features);
   const setFeature = useStore((s) => s.setFeature);
+  const toggleSceneShown = useStore((s) => s.toggleSceneShown);
   const deleteRoom = useStore((s) => s.deleteRoom);
   const reconnect = useStore((s) => s.reconnect);
   const signOut = useStore((s) => s.signOut);
@@ -73,8 +76,9 @@ export function SettingsView() {
   const [pickingFeature, setPickingFeature] = useState<
     (typeof FEATURES)[number] | null
   >(null);
+  const [pickingScenes, setPickingScenes] = useState(false);
 
-  // Room rows: tablet rooms always listed; HA areas only when they hold devices.
+  // Every room is created on the tablet; list them all, even empty ones.
   const roomInfo = useMemo(
     () =>
       registry
@@ -82,45 +86,30 @@ export function SettingsView() {
         : new Map<string, ReturnType<typeof buildRooms>[number]>(),
     [entities, registry],
   );
-  const roomRows = useMemo(() => {
-    if (!registry) return [];
-    return [
-      ...registry.areas.filter((a) => isCustomRoomId(a.area_id)),
-      ...registry.areas.filter(
-        (a) => !isCustomRoomId(a.area_id) && roomInfo.has(a.area_id),
-      ),
-    ];
-  }, [registry, roomInfo]);
+  const roomRows = registry?.areas ?? [];
 
-  // Visibility groups: everything the dashboard can show, by room.
+  // Visibility groups: the devices you've added, by room. (Unadded entities
+  // aren't on the dashboard, so there's nothing to hide.)
   const groups = useMemo(() => {
     if (!registry) return [];
     const byArea = new Map<string, HassEntity[]>();
-    const wholeHome: HassEntity[] = [];
     for (const entity of Object.values(entities)) {
       if (!isDisplayable(entity)) continue;
-      if (registry.hiddenEntities.has(entity.entity_id)) continue;
       const areaId = registry.entityArea[entity.entity_id];
-      if (!areaId) {
-        wholeHome.push(entity);
-        continue;
-      }
+      if (!areaId) continue;
       const list = byArea.get(areaId);
       if (list) list.push(entity);
       else byArea.set(areaId, [entity]);
     }
     const byName = (a: HassEntity, b: HassEntity) =>
       friendlyName(a).localeCompare(friendlyName(b));
-    const result = registry.areas
+    return registry.areas
       .map((a) => ({
         id: a.area_id,
         name: a.name,
         items: (byArea.get(a.area_id) ?? []).sort(byName),
       }))
       .filter((g) => g.items.length > 0);
-    if (wholeHome.length > 0)
-      result.push({ id: "_home", name: "Whole home", items: wholeHome.sort(byName) });
-    return result;
   }, [entities, registry]);
 
   return (
@@ -193,15 +182,15 @@ export function SettingsView() {
               );
               const Icon = feature.icon;
               const detail =
-                selection === "none"
+                !selection || selection === "none"
                   ? "Off"
-                  : selection
+                  : selection === "auto"
                     ? resolved
-                      ? friendlyName(resolved)
-                      : `${selection} (not found)`
-                    : resolved
                       ? `Automatic · ${friendlyName(resolved)}`
-                      : "Automatic · none found";
+                      : "Automatic · none found"
+                    : resolved
+                      ? friendlyName(resolved)
+                      : `${selection} (not found)`;
               return (
                 <button
                   key={feature.key}
@@ -225,20 +214,36 @@ export function SettingsView() {
                 </button>
               );
             })}
+            <button
+              onClick={() => setPickingScenes(true)}
+              className="pressable flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left hover:bg-ink/[0.04]"
+            >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-ink/[0.06] text-ink/55">
+                <Sparkles size={17} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[15px]">Scenes</span>
+                <span className="block truncate text-[12px] text-ink/55">
+                  {(features.scenes?.length ?? 0) > 0
+                    ? `${features.scenes!.length} on the home screen`
+                    : "None"}
+                </span>
+              </span>
+              <ChevronRight size={16} className="shrink-0 text-ink/30" />
+            </button>
           </div>
         </section>
 
         <section className="glass p-6">
           <h2 className="mb-1 text-[17px] font-semibold">Rooms</h2>
           <p className="mb-4 text-[14px] text-ink/55">
-            Create rooms and assign devices to them right here. Home Assistant
-            areas show up automatically when you use them. This setup is saved
-            to your Home Assistant profile, so kiosks and new tablets pick it
-            up on connect.
+            The dashboard shows only what you add. Create a room, then use the
+            pencil to search your Home Assistant entities and add them to it.
+            Everything is saved to your Home Assistant profile, so kiosks and
+            new tablets pick it up on connect.
           </p>
           <div className="space-y-1">
             {roomRows.map((area) => {
-              const custom = isCustomRoomId(area.area_id);
               const room = roomInfo.get(area.area_id);
               const count = room ? room.devices.length + room.cameras.length : 0;
               const hidden = hiddenAreas.includes(area.area_id);
@@ -255,25 +260,20 @@ export function SettingsView() {
                     </span>
                     <span className="block text-[12px] text-ink/45">
                       {count} {count === 1 ? "device" : "devices"}
-                      {custom ? "" : " · Home Assistant area"}
                     </span>
                   </span>
-                  {custom && (
-                    <>
-                      <IconButton
-                        label={`Edit ${area.name}`}
-                        onClick={() => setEditingRoom(area.area_id)}
-                      >
-                        <Pencil size={16} />
-                      </IconButton>
-                      <IconButton
-                        label={`Delete ${area.name}`}
-                        onClick={() => deleteRoom(area.area_id)}
-                      >
-                        <Trash2 size={16} />
-                      </IconButton>
-                    </>
-                  )}
+                  <IconButton
+                    label={`Edit ${area.name}`}
+                    onClick={() => setEditingRoom(area.area_id)}
+                  >
+                    <Pencil size={16} />
+                  </IconButton>
+                  <IconButton
+                    label={`Delete ${area.name}`}
+                    onClick={() => deleteRoom(area.area_id)}
+                  >
+                    <Trash2 size={16} />
+                  </IconButton>
                   <IconButton
                     label={hidden ? `Show ${area.name}` : `Hide ${area.name}`}
                     onClick={() => toggleAreaHidden(area.area_id)}
@@ -296,11 +296,12 @@ export function SettingsView() {
           </button>
         </section>
 
+        {groups.length > 0 && (
         <section className="glass p-6">
           <h2 className="mb-1 text-[17px] font-semibold">Devices</h2>
           <p className="mb-4 text-[14px] text-ink/55">
-            Choose what appears on this tablet. Hidden devices stay available
-            in Home Assistant.
+            Temporarily hide a device you've added without removing it from
+            its room.
           </p>
           <div className="space-y-1">
             {groups.map((group) => {
@@ -358,6 +359,7 @@ export function SettingsView() {
             })}
           </div>
         </section>
+        )}
 
         <section className="glass-soft p-6 text-[14px] leading-relaxed text-ink/55">
           <h2 className="mb-1 text-[15px] font-semibold text-ink/70">
@@ -384,6 +386,16 @@ export function SettingsView() {
           selection={features[pickingFeature.key]}
           onPick={(value) => setFeature(pickingFeature.key, value)}
           onClose={() => setPickingFeature(null)}
+        />
+      )}
+      {pickingScenes && (
+        <EntityPickerSheet
+          multi
+          title="Scenes"
+          domain="scene"
+          selections={features.scenes ?? []}
+          onToggle={toggleSceneShown}
+          onClose={() => setPickingScenes(false)}
         />
       )}
     </ViewShell>

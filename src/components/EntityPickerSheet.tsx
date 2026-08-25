@@ -1,6 +1,6 @@
-// Searchable entity picker for whole-home features (alarm, weather, …).
-// Offers Automatic (first suitable entity) and Off alongside every entity
-// of the feature's domain.
+// Searchable entity picker for whole-home features. Single mode chooses one
+// entity (or Automatic / Off) for e.g. the alarm; multi mode toggles a set,
+// used for which scenes appear on the home screen.
 
 import { useMemo, useState } from "react";
 import { Ban, Check, Search, Wand2 } from "lucide-react";
@@ -8,22 +8,30 @@ import { useStore } from "@/store/store";
 import { domainOf, friendlyName } from "@/lib/entities";
 import { Sheet } from "@/components/Sheet";
 
-interface Props {
+interface BaseProps {
   title: string;
   domain: string;
-  /** Current selection: undefined = automatic, "none" = off, else entity_id. */
-  selection: string | undefined;
-  onPick: (selection: string | null) => void;
   onClose: () => void;
 }
 
-export function EntityPickerSheet({
-  title,
-  domain,
-  selection,
-  onPick,
-  onClose,
-}: Props) {
+interface SingleProps extends BaseProps {
+  multi?: false;
+  /** undefined/"none" = off, "auto" = automatic, else entity_id. */
+  selection: string | undefined;
+  /** null = off, "auto" = automatic, else entity_id. */
+  onPick: (selection: string | null) => void;
+}
+
+interface MultiProps extends BaseProps {
+  multi: true;
+  selections: string[];
+  onToggle: (entityId: string) => void;
+}
+
+type Props = SingleProps | MultiProps;
+
+export function EntityPickerSheet(props: Props) {
+  const { title, domain, onClose } = props;
   const entities = useStore((s) => s.entities);
   const [query, setQuery] = useState("");
 
@@ -40,8 +48,9 @@ export function EntityPickerSheet({
       .sort((a, b) => friendlyName(a).localeCompare(friendlyName(b)));
   }, [entities, domain, query]);
 
-  function choose(value: string | null) {
-    onPick(value);
+  function pickSingle(value: string | null) {
+    if (props.multi) return;
+    props.onPick(value);
     onClose();
   }
 
@@ -57,25 +66,37 @@ export function EntityPickerSheet({
         />
       </label>
       <div className="no-scrollbar mt-3 max-h-[50vh] space-y-1 overflow-y-auto">
-        <PickerRow
-          selected={selection === undefined}
-          onClick={() => choose(null)}
-          icon={<Wand2 size={16} />}
-          label="Automatic"
-          detail="Use the first available entity"
-        />
-        <PickerRow
-          selected={selection === "none"}
-          onClick={() => choose("none")}
-          icon={<Ban size={16} />}
-          label="Off"
-          detail="Don't show this on the dashboard"
-        />
+        {!props.multi && (
+          <>
+            <PickerRow
+              selected={props.selection === "auto"}
+              onClick={() => pickSingle("auto")}
+              icon={<Wand2 size={16} />}
+              label="Automatic"
+              detail="Use the first available entity"
+            />
+            <PickerRow
+              selected={!props.selection || props.selection === "none"}
+              onClick={() => pickSingle(null)}
+              icon={<Ban size={16} />}
+              label="Off"
+              detail="Don't show this on the dashboard"
+            />
+          </>
+        )}
         {matches.map((entity) => (
           <PickerRow
             key={entity.entity_id}
-            selected={selection === entity.entity_id}
-            onClick={() => choose(entity.entity_id)}
+            selected={
+              props.multi
+                ? props.selections.includes(entity.entity_id)
+                : props.selection === entity.entity_id
+            }
+            onClick={() =>
+              props.multi
+                ? props.onToggle(entity.entity_id)
+                : pickSingle(entity.entity_id)
+            }
             label={friendlyName(entity)}
             detail={entity.entity_id}
           />

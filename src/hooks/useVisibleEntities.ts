@@ -20,25 +20,22 @@ export function useVisibleEntities(): HassEntities {
 }
 
 /**
- * The registry the views actually render from: Home Assistant areas merged
- * with rooms created on this tablet. A tablet assignment overrides an
- * entity's Home Assistant area, so rooms work with or without areas.
+ * The registry the views actually render from. The dashboard is fully
+ * curated: only rooms created here exist, and only entities assigned to
+ * them appear. Home Assistant areas are never rendered directly — they
+ * serve as hints in the room editor's search.
  */
 export function useEffectiveRegistry(): Registry | null {
   const registry = useStore((s) => s.registry);
   const customRooms = useStore((s) => s.customRooms);
   return useMemo(() => {
     if (!registry) return null;
-    if (customRooms.length === 0) return registry;
-    const entityArea = { ...registry.entityArea };
+    const entityArea: Record<string, string> = {};
     for (const room of customRooms) {
       for (const id of room.entityIds) entityArea[id] = room.id;
     }
     return {
-      areas: [
-        ...registry.areas,
-        ...customRooms.map((r) => ({ area_id: r.id, name: r.name })),
-      ],
+      areas: customRooms.map((r) => ({ area_id: r.id, name: r.name })),
       entityArea,
       hiddenEntities: registry.hiddenEntities,
     };
