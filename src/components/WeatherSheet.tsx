@@ -1,7 +1,7 @@
-// Tap the weather chip for the forecast — and the radar, when a radar
-// camera has been chosen in Settings.
+// Tap the weather chip for the forecast and radar. Radar is the built-in
+// animated map by default; choosing a camera in Settings shows that instead.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { HassEntity } from "home-assistant-js-websocket";
 import { Droplets, Loader2, Wind } from "lucide-react";
 import { useForecast } from "@/hooks/useForecast";
@@ -9,6 +9,8 @@ import { useStore } from "@/store/store";
 import { friendlyName, weatherLabel } from "@/lib/entities";
 import { weatherIcon } from "@/lib/weather";
 import { CameraCard } from "@/components/CameraCard";
+import { RadarMap } from "@/components/RadarMap";
+import { fetchConfig } from "@/lib/ha";
 import { Sheet } from "@/components/Sheet";
 
 type Range = "daily" | "hourly";
@@ -25,7 +27,23 @@ export function WeatherSheet({
   const entities = useStore((s) => s.entities);
   const setFullscreenCamera = useStore((s) => s.setFullscreenCamera);
   const radarId = useStore((s) => s.features.radar);
-  const radar = radarId && radarId !== "none" ? entities[radarId] : undefined;
+  // A chosen camera wins; otherwise fall back to the built-in radar map.
+  const radarCamera = radarId && radarId !== "none" ? entities[radarId] : undefined;
+  const [home, setHome] = useState<{ lat: number; lon: number } | null>(null);
+
+  useEffect(() => {
+    if (radarCamera) return;
+    let cancelled = false;
+    void fetchConfig().then((config) => {
+      if (cancelled || !config) return;
+      if (typeof config.latitude === "number" && typeof config.longitude === "number") {
+        setHome({ lat: config.latitude, lon: config.longitude });
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [radarCamera]);
 
   const Icon = weatherIcon(entity.state);
   const unit = (entity.attributes.temperature_unit as string | undefined) ?? "°";
@@ -127,19 +145,25 @@ export function WeatherSheet({
         })}
       </div>
 
-      {radar && (
-        <div className="mt-4">
-          <div className="mb-2 text-[13px] font-medium text-ink/55">Radar</div>
+      <div className="mt-4">
+        <div className="mb-2 text-[13px] font-medium text-ink/55">Radar</div>
+        {radarCamera ? (
           <CameraCard
-            entity={radar}
+            entity={radarCamera}
             refreshMs={30_000}
             onClick={() => {
               onClose();
-              setFullscreenCamera(radar.entity_id);
+              setFullscreenCamera(radarCamera.entity_id);
             }}
           />
-        </div>
-      )}
+        ) : home ? (
+          <RadarMap latitude={home.lat} longitude={home.lon} />
+        ) : (
+          <p className="py-4 text-center text-[14px] text-ink/55">
+            Loading radar…
+          </p>
+        )}
+      </div>
     </Sheet>
   );
 }

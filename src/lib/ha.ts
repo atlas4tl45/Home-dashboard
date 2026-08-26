@@ -17,6 +17,27 @@ import {
 } from "home-assistant-js-websocket";
 import type { Area, Credentials } from "@/lib/types";
 
+export interface HaConfig {
+  latitude: number;
+  longitude: number;
+  location_name?: string;
+  unit_system?: { length?: string };
+}
+
+/** Home Assistant's own configuration — used for the home's coordinates. */
+export async function fetchConfig(): Promise<HaConfig | null> {
+  if (demoHandler) {
+    // Somewhere with interesting weather, for the sample home.
+    return { latitude: 39.7392, longitude: -104.9903, location_name: "Home" };
+  }
+  if (!connection) return null;
+  try {
+    return await connection.sendMessagePromise<HaConfig>({ type: "get_config" });
+  } catch {
+    return null;
+  }
+}
+
 export interface ForecastEntry {
   datetime: string;
   condition?: string;

@@ -58,10 +58,17 @@ const FEATURES: {
   label: string;
   domain: string;
   icon: typeof Shield;
+  hint?: string;
 }[] = [
   { key: "alarm", label: "Alarm system", domain: "alarm_control_panel", icon: Shield },
   { key: "weather", label: "Weather", domain: "weather", icon: CloudSun },
-  { key: "radar", label: "Weather radar", domain: "camera", icon: Radar },
+  {
+    key: "radar",
+    label: "Radar camera",
+    domain: "camera",
+    icon: Radar,
+    hint: "Off uses the built-in radar map",
+  },
 ];
 
 const RETURN_HOME_OPTIONS = [
@@ -362,7 +369,7 @@ export function SettingsView() {
               const Icon = feature.icon;
               const detail =
                 !selection || selection === "none"
-                  ? "Off"
+                  ? (feature.hint ?? "Off")
                   : selection === "auto"
                     ? resolved
                       ? `Automatic · ${friendlyName(resolved)}`
