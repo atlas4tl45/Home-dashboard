@@ -4,24 +4,16 @@
 import { useState } from "react";
 import type { HassEntity } from "home-assistant-js-websocket";
 import {
-  Cloud,
-  CloudFog,
-  CloudLightning,
-  CloudRain,
-  CloudSnow,
-  CloudSun,
   DoorOpen,
   Lightbulb,
-  Moon,
   ShieldAlert,
   ShieldCheck,
   ShieldOff,
   Sparkles,
-  Sun,
-  Wind,
-  type LucideIcon,
 } from "lucide-react";
 import { useStore } from "@/store/store";
+import { weatherIcon } from "@/lib/weather";
+import { WeatherSheet } from "@/components/WeatherSheet";
 import { useEffectiveRegistry, useVisibleEntities } from "@/hooks/useVisibleEntities";
 import { useClock } from "@/hooks/useClock";
 import { useSecretTaps } from "@/hooks/useSecretTaps";
@@ -40,23 +32,6 @@ import {
 } from "@/lib/entities";
 import { ViewShell } from "@/views/ViewShell";
 
-const WEATHER_ICONS: Record<string, LucideIcon> = {
-  "clear-night": Moon,
-  cloudy: Cloud,
-  fog: CloudFog,
-  hail: CloudSnow,
-  lightning: CloudLightning,
-  "lightning-rainy": CloudLightning,
-  partlycloudy: CloudSun,
-  pouring: CloudRain,
-  rainy: CloudRain,
-  snowy: CloudSnow,
-  "snowy-rainy": CloudSnow,
-  sunny: Sun,
-  windy: Wind,
-  "windy-variant": Wind,
-};
-
 function greeting(hour: number): string {
   if (hour < 5) return "Good night";
   if (hour < 12) return "Good morning";
@@ -71,6 +46,7 @@ export function HomeView() {
   const navigate = useStore((s) => s.navigate);
   const requestSettings = useStore((s) => s.requestSettings);
   const { onTap: onClockTap, progress: tapProgress } = useSecretTaps(requestSettings);
+  const [weatherOpen, setWeatherOpen] = useState(false);
   const now = useClock();
 
   const rooms = registry
@@ -127,7 +103,12 @@ export function HomeView() {
           </div>
 
           <div className="mt-6 flex flex-wrap gap-3">
-            {weather && <WeatherChip entity={weather} />}
+            {weather && (
+              <WeatherChip
+                entity={weather}
+                onOpen={() => setWeatherOpen(true)}
+              />
+            )}
             {alarm && (
               <button
                 onClick={() => navigate({ name: "security" })}
@@ -215,6 +196,9 @@ export function HomeView() {
           )}
         </div>
       </div>
+      {weatherOpen && weather && (
+        <WeatherSheet entity={weather} onClose={() => setWeatherOpen(false)} />
+      )}
     </ViewShell>
   );
 }
@@ -244,17 +228,26 @@ function AlarmGlyph({ state }: { state: string }) {
   return <ShieldOff size={19} className="text-ink/55" />;
 }
 
-function WeatherChip({ entity }: { entity: HassEntity }) {
-  const Icon = WEATHER_ICONS[entity.state] ?? Cloud;
+function WeatherChip({
+  entity,
+  onOpen,
+}: {
+  entity: HassEntity;
+  onOpen: () => void;
+}) {
+  const Icon = weatherIcon(entity.state);
   const temp = entity.attributes.temperature as number | undefined;
   const unit = (entity.attributes.temperature_unit as string | undefined) ?? "°";
   return (
-    <span className="glass-pill flex items-center gap-2.5 px-5 py-3">
+    <button
+      onClick={onOpen}
+      className="glass-pill pressable flex items-center gap-2.5 px-5 py-3"
+    >
       <Icon size={19} className="text-ink/70" />
       <span className="text-[15px] font-medium">
         {temp != null ? `${Math.round(temp)}${unit}` : weatherLabel(entity.state)}
       </span>
-    </span>
+    </button>
   );
 }
 

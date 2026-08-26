@@ -7,6 +7,7 @@ import type { Registry } from "@/lib/ha";
 import {
   applyDemoService,
   demoCustomRooms,
+  demoForecast,
   demoEntities,
   demoFeatures,
   demoRegistry,
@@ -122,7 +123,10 @@ interface AppState {
   renameRoom: (roomId: string, name: string) => void;
   deleteRoom: (roomId: string) => void;
   toggleRoomEntity: (roomId: string, entityId: string) => void;
-  setFeature: (feature: "alarm" | "weather", selection: string | null) => void;
+  setFeature: (
+    feature: "alarm" | "weather" | "radar",
+    selection: string | null,
+  ) => void;
   toggleSceneShown: (entityId: string) => void;
   setKiosk: (patch: Partial<KioskSettings>) => void;
   /** Pass null to fall back to the Home Assistant name. */
@@ -479,6 +483,7 @@ window
   .addEventListener("change", () => applyTheme(useStore.getState().theme));
 
 if (isDemo) {
+  ha.setDemoForecast(demoForecast);
   ha.setDemoHandler((domain, service, data, entityId) => {
     const before = useStore.getState().entities;
     // Resolve the outcome up front: after the transitional state is applied

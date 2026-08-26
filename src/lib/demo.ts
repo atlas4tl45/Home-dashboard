@@ -198,6 +198,41 @@ export const demoFeatures = {
   scenes: ["scene.good_morning", "scene.movie_night", "scene.all_off"],
 };
 
+const DEMO_CONDITIONS = [
+  "partlycloudy",
+  "sunny",
+  "rainy",
+  "cloudy",
+  "pouring",
+  "sunny",
+  "partlycloudy",
+  "snowy",
+  "windy",
+  "sunny",
+];
+
+/** A believable forecast so the demo's weather sheet has something to show. */
+export function demoForecast(type: string) {
+  const hourly = type === "hourly";
+  const now = new Date();
+  return Array.from({ length: hourly ? 24 : 10 }, (_, i) => {
+    const when = new Date(now);
+    if (hourly) when.setHours(now.getHours() + i + 1, 0, 0, 0);
+    else when.setDate(now.getDate() + i);
+    const condition = DEMO_CONDITIONS[(hourly ? i % 10 : i) % 10];
+    const base = hourly ? 68 + Math.round(6 * Math.sin(i / 3)) : 74 - (i % 5);
+    return {
+      datetime: when.toISOString(),
+      condition,
+      temperature: base,
+      ...(hourly ? {} : { templow: base - 11 }),
+      precipitation_probability: ["rainy", "pouring", "snowy"].includes(condition)
+        ? 40 + ((i * 7) % 50)
+        : 0,
+    };
+  });
+}
+
 /** Set one entity's state, optionally merging attributes. */
 export function patchDemoState(
   entities: HassEntities,

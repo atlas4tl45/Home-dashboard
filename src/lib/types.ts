@@ -33,6 +33,8 @@ export interface CustomRoom {
 export interface FeatureSelections {
   alarm?: string;
   weather?: string;
+  /** Camera entity showing a weather radar, offered inside the forecast. */
+  radar?: string;
   scenes?: string[];
 }
 

@@ -17,6 +17,18 @@ import {
 } from "home-assistant-js-websocket";
 import type { Area, Credentials } from "@/lib/types";
 
+export interface ForecastEntry {
+  datetime: string;
+  condition?: string;
+  temperature?: number;
+  templow?: number;
+  precipitation?: number;
+  precipitation_probability?: number;
+  wind_speed?: number;
+  humidity?: number;
+  is_daytime?: boolean;
+}
+
 let connection: Connection | null = null;
 
 export class HaError extends Error {
@@ -153,9 +165,16 @@ type DemoHandler = (
 ) => void;
 
 let demoHandler: DemoHandler | null = null;
+let demoForecast: ((type: string) => ForecastEntry[]) | null = null;
 
 export function setDemoHandler(handler: DemoHandler): void {
   demoHandler = handler;
+}
+
+export function setDemoForecast(
+  provider: (type: string) => ForecastEntry[],
+): void {
+  demoForecast = provider;
 }
 
 /** Fire a service call, e.g. callService("light", "turn_on", { brightness: 128 }, "light.sofa"). */
@@ -225,6 +244,34 @@ export async function fetchCameraStream(entityId: string): Promise<string | null
   } catch {
     return null;
   }
+}
+
+/**
+ * Subscribe to a weather entity's forecast. Modern Home Assistant no longer
+ * puts forecasts in the entity's attributes — they're pushed over this
+ * subscription instead. Returns an unsubscribe function.
+ */
+export function subscribeForecast(
+  entityId: string,
+  forecastType: "daily" | "hourly" | "twice_daily",
+  cb: (forecast: ForecastEntry[]) => void,
+): () => void {
+  if (demoForecast) {
+    cb(demoForecast(forecastType));
+    return () => {};
+  }
+  if (!connection) return () => {};
+  const unsub = connection.subscribeMessage<{
+    type: string;
+    forecast: ForecastEntry[] | null;
+  }>((message) => cb(message.forecast ?? []), {
+    type: "weather/subscribe_forecast",
+    entity_id: entityId,
+    forecast_type: forecastType,
+  });
+  return () => {
+    void unsub.then((fn) => fn()).catch(() => {});
+  };
 }
 
 /**

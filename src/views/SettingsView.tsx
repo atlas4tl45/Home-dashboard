@@ -16,6 +16,7 @@ import {
   Pencil,
   Plus,
   Monitor,
+  Radar,
   Download,
   RefreshCw,
   RotateCw,
@@ -53,13 +54,14 @@ import { EntityPickerSheet } from "@/components/EntityPickerSheet";
 import { ViewHeader, ViewShell } from "@/views/ViewShell";
 
 const FEATURES: {
-  key: "alarm" | "weather";
+  key: "alarm" | "weather" | "radar";
   label: string;
   domain: string;
   icon: typeof Shield;
 }[] = [
   { key: "alarm", label: "Alarm system", domain: "alarm_control_panel", icon: Shield },
   { key: "weather", label: "Weather", domain: "weather", icon: CloudSun },
+  { key: "radar", label: "Weather radar", domain: "camera", icon: Radar },
 ];
 
 const RETURN_HOME_OPTIONS = [
