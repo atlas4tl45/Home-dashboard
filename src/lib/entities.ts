@@ -171,6 +171,23 @@ export function supportsColor(e: HassEntity): boolean {
   return modes.some((m) => ["hs", "rgb", "rgbw", "rgbww", "xy"].includes(m));
 }
 
+/** Built-in scenes a light can play — Nanoleaf panels, LED strips, bulbs. */
+export function effectList(e: HassEntity): string[] {
+  const list = e.attributes.effect_list;
+  return Array.isArray(list) ? (list as string[]) : [];
+}
+
+export function supportsEffects(e: HassEntity): boolean {
+  return effectList(e).length > 0;
+}
+
+/** The scene currently playing, if it isn't the "no effect" placeholder. */
+export function currentEffect(e: HassEntity): string | null {
+  const effect = e.attributes.effect as string | undefined;
+  if (!effect) return null;
+  return ["none", "off", "solid"].includes(effect.toLowerCase()) ? null : effect;
+}
+
 const CAMERA_STREAM = 2;
 
 /** Can this camera provide a live stream, or only still snapshots? */
@@ -190,8 +207,12 @@ export function stateLabel(e: HassEntity): string {
   const domain = domainOf(e.entity_id);
   switch (domain) {
     case "light": {
+      if (!isOn(e)) return "Off";
+      // A playing scene says more than a percentage on a panel light.
+      const effect = currentEffect(e);
+      if (effect) return `On · ${effect}`;
       const pct = brightnessPct(e);
-      return isOn(e) ? (pct != null ? `On · ${pct}%` : "On") : "Off";
+      return pct != null ? `On · ${pct}%` : "On";
     }
     case "fan": {
       const pct = e.attributes.percentage as number | undefined;

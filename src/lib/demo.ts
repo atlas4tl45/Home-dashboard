@@ -85,6 +85,26 @@ const list: HassEntity[] = [
 
   // Office
   ent("light.office", "off", { friendly_name: "Office Light", ...dimmable }),
+  ent("light.panels", "on", {
+    friendly_name: "Light Panels",
+    brightness: 210,
+    supported_color_modes: ["color_temp", "hs"],
+    effect: "Northern Lights",
+    effect_list: [
+      "Northern Lights",
+      "Forest",
+      "Nemo",
+      "Sunset",
+      "Fireplace",
+      "Cotton Candy",
+      "Rhythm Fireplace",
+      "Inner Peace",
+      "Meteor Shower",
+      "Paint Splatter",
+      "Snowfall",
+      "Pop Rocks",
+    ],
+  }),
   ent("fan.office_fan", "off", { friendly_name: "Desk Fan", percentage: 0 }),
 
   // Entry
@@ -140,6 +160,7 @@ const areaOf: Record<string, string> = {
   "cover.bedroom_shades": "bedroom",
   "sensor.bedroom_temp": "bedroom",
   "light.office": "office",
+  "light.panels": "office",
   "fan.office_fan": "office",
   "lock.front_door": "entry",
   "lock.back_door": "entry",
@@ -315,6 +336,7 @@ export function applyDemoService(
   const on = entity.state === "on";
   switch (`${domain}.${service}`) {
     case "light.turn_on":
+      if (data?.effect) return patch("on", { effect: data.effect });
       return patch("on", {
         brightness:
           data?.brightness_pct != null

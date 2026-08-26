@@ -14,6 +14,7 @@ import {
   stateLabel,
   supportsColor,
   supportsColorTemp,
+  supportsEffects,
 } from "@/lib/entities";
 import { DeviceTile } from "@/components/tiles/DeviceTile";
 import { LockTile } from "@/components/tiles/LockTile";
@@ -81,7 +82,9 @@ export function RoomView({ areaId }: { areaId: string }) {
             return <LockTile key={entity.entity_id} entity={entity} />;
           const tunable =
             domain === "light" &&
-            (supportsColorTemp(entity) || supportsColor(entity));
+            (supportsColorTemp(entity) ||
+              supportsColor(entity) ||
+              supportsEffects(entity));
           return (
             <DeviceTile
               key={entity.entity_id}
